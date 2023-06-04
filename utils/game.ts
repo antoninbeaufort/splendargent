@@ -1,4 +1,13 @@
-import { Game } from "./types.ts";
+import { Game, GemStone } from "./types.ts";
+
+const symbolColorMap = new Map([
+  [GemStone.EMERALD, '#0d9344'],
+  [GemStone.DIAMOND, '#f2f3f4'],
+  [GemStone.SAPPHIRE, '#035cac'],
+  [GemStone.ONYX, '#3e3e3f'],
+  [GemStone.RUBY, '#ee3e35'],
+  [GemStone.GOLD, '#fff101'],
+]);
 
 export interface GameStateInProgress {
   state: "in_progress";

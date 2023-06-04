@@ -7,9 +7,9 @@ export function Header(props: { user: User | null }) {
   return (
     <>
       <div class="flex justify-between items-center">
-        <h1 class="text-4xl font-bold">Tic-Tac-Toe</h1>
+        <h1 class="text-4xl font-bold">Splendargent</h1>
         <a
-          href="https://github.com/denoland/tic-tac-toe"
+          href="https://github.com/antoninbeaufort/splendargent"
           class={`${linkClass} text-right`}
         >
           View on GitHub
@@ -17,27 +17,23 @@ export function Header(props: { user: User | null }) {
       </div>
 
       <div class="flex items-center justify-between">
-        {props.user
-          ? (
-            <>
-              <p class="text-sm text-gray-600">
-                Logged in as <UserNameHorizontal user={props.user} />
-              </p>
-              <a class={linkClass} href="/auth/signout">
-                Log out
-              </a>
-            </>
-          )
-          : (
-            <>
-              <p class="text-sm text-gray-600">
-                Anonymous user
-              </p>
-              <a class={linkClass} href="/auth/signin">
-                Log in
-              </a>
-            </>
-          )}
+        {props.user ? (
+          <>
+            <p class="text-sm text-gray-600">
+              Logged in as <UserNameHorizontal user={props.user} />
+            </p>
+            <a class={linkClass} href="/auth/signout">
+              Log out
+            </a>
+          </>
+        ) : (
+          <>
+            <p class="text-sm text-gray-600">Anonymous user</p>
+            <a class={linkClass} href="/auth/signin">
+              Log in
+            </a>
+          </>
+        )}
       </div>
     </>
   );
