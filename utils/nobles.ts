@@ -1,7 +1,8 @@
+import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
 import { GemStone } from "./types.ts";
 import type { Noble } from "./types.ts";
 
-const cards: Noble[] = [
+const nobles: Noble[] = [
   {
     points: 3,
     requirements: {
@@ -103,3 +104,10 @@ const cards: Noble[] = [
     },
   },
 ];
+
+export const prepareNobles = (numberOfPlayers: number): Noble[] => {
+  const shuffledNobles = shuffle(nobles);
+  const numberOfNoblesToPick = numberOfPlayers + 1;
+
+  return shuffledNobles.slice(0, numberOfNoblesToPick);
+};

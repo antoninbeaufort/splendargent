@@ -1,7 +1,8 @@
+import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
 import { GemStone } from "./types.ts";
 import type { Card } from "./types.ts";
 
-const cards: Card[] = [
+export const cards: Card[] = [
   {
     symbol: GemStone.ONYX,
     points: 0,
@@ -1083,3 +1084,25 @@ const cards: Card[] = [
     },
   },
 ];
+
+const cardsBy = (givenCards: Card[], level: Card["level"]): Card[] => {
+  return givenCards.filter((card) => card.level === level);
+};
+
+export const separateCards = (
+  givenCards: Card[]
+): Map<Card["level"], Card[]> => {
+  return new Map([
+    [1, cardsBy(givenCards, 1)] as const,
+    [2, cardsBy(givenCards, 2)] as const,
+    [3, cardsBy(givenCards, 3)] as const,
+  ]);
+};
+
+export const prepareCards = (
+  givenCards: Card[]
+): Map<Card["level"], Card[]> => {
+  const shuffledCards = shuffle(givenCards);
+
+  return separateCards(shuffledCards);
+};

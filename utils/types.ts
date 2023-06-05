@@ -32,20 +32,8 @@ export enum GemStone {
   SAPPHIRE = "SAPPHIRE",
   ONYX = "ONYX",
   RUBY = "RUBY",
-  GOLD = "GOLD",
+  // GOLD = "GOLD",
 }
-
-// 2-3-4 players
-
-// 10 nobles (n players + 1 selected by game)
-// 7 tokens (expect gold which is 5), specific conditions when we play at 2/3 players
-// 3 levels of cards : O(40); OO(30); OOO(20)
-// 4 card of each level shown (until there is no enough)
-// max 10 tokens by player at the same time
-// end condition: the first player with 15 points or more end the game (we complete the tour until be just before the player that has started the game), then we count the points the ranking is done
-
-// player turn: 1 action between : pick - buy - reserve
-// at the end of each player turn check for noble auto distribution and end condition
 
 type Price = Partial<Record<GemStone, number>>;
 
@@ -62,16 +50,23 @@ export type Noble = {
 };
 
 type Player = {
+  id: string;
   tokens: Price;
   cards: Card[];
   nobles: Noble[];
 };
+// reservedCards: Card[];
 
-type Test = {
+export type AllowedNumberOfPlayers = 2 | 3 | 4;
+
+export type SplendorGame = {
+  id: string;
   players: Player[];
-  decks: Map<Card["level"], Card[]>;
+  visibleCards: Map<Card["level"], Card[]>;
   nobles: Noble[];
+  tokens: Record<GemStone, number>;
 };
+// need somewhere with decks: Map<Card["level"], Card[]>;
 
 export interface Game {
   id: string;
