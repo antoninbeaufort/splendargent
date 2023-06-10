@@ -1,5 +1,3 @@
-import { stub } from "https://deno.land/std@0.191.0/testing/mock.ts";
-import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
 import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
 import {
   beforeEach,
@@ -8,20 +6,6 @@ import {
 } from "https://deno.land/std@0.191.0/testing/bdd.ts";
 import { initializeGameFrom, prepareTokens } from "🛠️/game.ts";
 import { GemStone, SplendorGame } from "🛠️/types.ts";
-
-// FIXME: this do not work
-stub({ shuffle }, "shuffle", (arg) => [...arg]);
-
-Deno.test("shuffle stub returns is equal to input", () => {
-  // Given
-  const test = [1, 2, 3];
-
-  // When
-  const shuffledTest = shuffle(test);
-
-  // Then
-  assertEquals(shuffledTest, [1, 2, 3]);
-});
 
 const testCases = [
   { numberOfPlayers: 2, expectedNumberOfTokens: 4 },
@@ -61,9 +45,31 @@ describe("action available when it's your turn", () => {
         name: "Player 2",
         avatarUrl: "http://localhost/avatars/player2.png",
       },
+      {
+        id: "3",
+        login: "player3",
+        name: "Player 3",
+        avatarUrl: "http://localhost/avatars/player3.png",
+      },
+      {
+        id: "4",
+        login: "player4",
+        name: "Player 4",
+        avatarUrl: "http://localhost/avatars/player4.png",
+      },
     ]);
   });
 
   it("should allow player to pick different tokens", () => {
+    // When
+    // pick(game, [GemStone.EMERALD, GemStone.DIAMOND, GemStone.SAPPHIRE]);
+
+    // Then
+    assertEquals(game.players[0].tokens[GemStone.EMERALD], 1);
+    assertEquals(game.players[0].tokens[GemStone.DIAMOND], 1);
+    assertEquals(game.players[0].tokens[GemStone.SAPPHIRE], 1);
+    assertEquals(game.tokens[GemStone.EMERALD], 6);
+    assertEquals(game.tokens[GemStone.DIAMOND], 6);
+    assertEquals(game.tokens[GemStone.SAPPHIRE], 6);
   });
 });
