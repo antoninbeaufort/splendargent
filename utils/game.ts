@@ -1,13 +1,14 @@
-import { prepareCards } from "./cards.ts";
-import { cards } from "./cards.ts";
-import { prepareNobles } from "./nobles.ts";
+import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
+import { prepareCards } from "🛠️/cards.ts";
+import { cards } from "🛠️/cards.ts";
+import { prepareNobles } from "🛠️/nobles.ts";
 import {
   AllowedNumberOfPlayers,
   Game,
   GemStone,
   SplendorGame,
   User,
-} from "./types.ts";
+} from "🛠️/types.ts";
 
 // 2-3-4 players
 
@@ -26,10 +27,10 @@ const numberOfTokensByPlayersMap: Record<AllowedNumberOfPlayers, number> = {
 
 // pick:
 // 3 tokens with different color
-// min 4 tokenson stack to pick 2 of same color
+// min 4 tokens on stack to pick 2 of same color
 // a player cannot have more than 10 tokens at the end of his round he need to give away some token to be max 10
 
-// at the end of each player turn check for noble auto distribution and end condition
+// at the end of each player turn check for noble auto distribution and end condition (one distrubtion by player bu turn max)
 // end condition: the first player with 15 points or more end the game (we complete the tour until be just before the player that has started the game), then we count the points the ranking is done
 
 const symbolColorMap = new Map([
@@ -42,30 +43,53 @@ const symbolColorMap = new Map([
 ]);
 
 export const prepareTokens = (
-  numberOfPlayers: AllowedNumberOfPlayers
+  numberOfPlayers: AllowedNumberOfPlayers,
 ): Record<GemStone, number> => {
   const gemStones = Object.keys(GemStone) as GemStone[];
   const entries = gemStones.map(
     (key) =>
-      [key, numberOfTokensByPlayersMap[numberOfPlayers]] as [GemStone, number]
+      [key, numberOfTokensByPlayersMap[numberOfPlayers]] as [GemStone, number],
   );
 
   return Object.fromEntries(entries) as Record<GemStone, number>;
 };
 
+const isValidNumberOfPlayers = (
+  numberOfPlayers: number,
+): numberOfPlayers is AllowedNumberOfPlayers => {
+  return [2, 3, 4].includes(numberOfPlayers);
+};
+
 export const initializeGameFrom = (users: User[]): SplendorGame => {
-  const numberOfPlayers = users.length as AllowedNumberOfPlayers;
+  const numberOfPlayers = users.length;
+  if (!isValidNumberOfPlayers(numberOfPlayers)) {
+    throw new Error("Unvalid number of players");
+  }
 
   const decks = prepareCards(cards);
   const nobles = prepareNobles(numberOfPlayers);
   const tokens = prepareTokens(numberOfPlayers);
+  const visibleCards = new Map([
+    [1, decks.get(1)!.splice(0, 4)] as const,
+    [2, decks.get(2)!.splice(0, 4)] as const,
+    [3, decks.get(3)!.splice(0, 4)] as const,
+  ]);
+  const shuffledUsers = shuffle(users);
+  const players = shuffledUsers.map((user) => ({
+    user,
+    tokens: {},
+    cards: [],
+    nobles: [],
+  }));
 
   return {
     id: crypto.randomUUID(),
-    players: [], // Player[],
-    visibleCards: new Map([]), // Map<Card["level"], Card[]>,
+    players,
+    visibleCards,
     nobles,
     tokens,
+    decks,
+    turn: players[0].user.id,
   };
 };
 

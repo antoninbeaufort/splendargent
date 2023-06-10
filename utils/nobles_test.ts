@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
-import { prepareNobles } from "./nobles.ts";
+import { prepareNobles } from "🛠️/nobles.ts";
 
 const testCases = [
   { numberOfPlayers: 2, expectedNumberOfNobles: 3 },
@@ -15,6 +15,6 @@ testCases.map(({ numberOfPlayers, expectedNumberOfNobles }) => {
 
       // Then
       assertEquals(nobles.length, expectedNumberOfNobles);
-    }
+    },
   );
 });

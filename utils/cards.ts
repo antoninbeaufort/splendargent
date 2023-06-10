@@ -1,6 +1,6 @@
 import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
-import { GemStone } from "./types.ts";
-import type { Card } from "./types.ts";
+import { GemStone } from "🛠️/types.ts";
+import type { Card } from "🛠️/types.ts";
 
 export const cards: Card[] = [
   {
@@ -1090,7 +1090,7 @@ const cardsBy = (givenCards: Card[], level: Card["level"]): Card[] => {
 };
 
 export const separateCards = (
-  givenCards: Card[]
+  givenCards: Card[],
 ): Map<Card["level"], Card[]> => {
   return new Map([
     [1, cardsBy(givenCards, 1)] as const,
@@ -1100,7 +1100,7 @@ export const separateCards = (
 };
 
 export const prepareCards = (
-  givenCards: Card[]
+  givenCards: Card[],
 ): Map<Card["level"], Card[]> => {
   const shuffledCards = shuffle(givenCards);
 

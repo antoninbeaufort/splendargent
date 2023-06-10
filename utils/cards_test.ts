@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
-import { separateCards } from "./cards.ts";
-import type { Card } from "./types.ts";
-import { GemStone } from "./types.ts";
+import { separateCards } from "🛠️/cards.ts";
+import type { Card } from "🛠️/types.ts";
+import { GemStone } from "🛠️/types.ts";
 
 Deno.test("should separate cards by level", () => {
   // Given

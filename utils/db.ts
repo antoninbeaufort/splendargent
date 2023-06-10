@@ -4,7 +4,7 @@
  * synchronization between clients.
  */
 
-import { Game, OauthSession, User } from "./types.ts";
+import { Game, OauthSession, User } from "🛠️/types.ts";
 
 const kv = await Deno.openKv();
 

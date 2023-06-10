@@ -23,7 +23,7 @@ export type GameGrid = [
   string | null,
   string | null,
   string | null,
-  string | null
+  string | null,
 ];
 
 export enum GemStone {
@@ -50,7 +50,7 @@ export type Noble = {
 };
 
 type Player = {
-  id: string;
+  user: User;
   tokens: Price;
   cards: Card[];
   nobles: Noble[];
@@ -65,8 +65,9 @@ export type SplendorGame = {
   visibleCards: Map<Card["level"], Card[]>;
   nobles: Noble[];
   tokens: Record<GemStone, number>;
+  decks: Map<Card["level"], Card[]>; // TODO: make this private
+  turn: Player["user"]["id"];
 };
-// need somewhere with decks: Map<Card["level"], Card[]>;
 
 export interface Game {
   id: string;
