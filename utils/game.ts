@@ -144,11 +144,6 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
     [_gemStone, occurences],
   ) => occurences === 2);
   if (isManyGemStoneOfSameType) {
-    if (Object.keys(gemStoneOccurences).length > 1) {
-      throw new Error(
-        "you can't pick more 2 tokens of a gemstone and multiple type of gemstone at the same time",
-      );
-    }
     const numberOfDifferentGemStones = Object.keys(gemStoneOccurences).length;
     if (numberOfDifferentGemStones > 1) {
       throw new Error(

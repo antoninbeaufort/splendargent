@@ -1,4 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertThrows,
+} from "https://deno.land/std@0.190.0/testing/asserts.ts";
 import {
   beforeEach,
   describe,
@@ -74,5 +77,105 @@ describe("action available when it's your turn", () => {
     assertEquals(updatedGame.tokens[GemStone.EMERALD], 6);
     assertEquals(updatedGame.tokens[GemStone.DIAMOND], 6);
     assertEquals(updatedGame.tokens[GemStone.SAPPHIRE], 6);
+  });
+
+  it("should allow player to pick 2 tokens of same gemstone", () => {
+    // When
+    const updatedGame = action(game, {
+      type: "pick",
+      tokens: [GemStone.DIAMOND, GemStone.DIAMOND],
+    });
+
+    // Then
+    assertEquals(updatedGame.players[0].tokens[GemStone.DIAMOND], 2);
+    assertEquals(updatedGame.tokens[GemStone.DIAMOND], 5);
+  });
+
+  it("should not be able to pick more than 3 tokens", () => {
+    // When
+    const pick = () =>
+      action(game, {
+        type: "pick",
+        tokens: [
+          GemStone.DIAMOND,
+          GemStone.EMERALD,
+          GemStone.ONYX,
+          GemStone.RUBY,
+        ],
+      });
+
+    // Then
+    assertThrows(pick);
+  });
+
+  it("should not be able to pick 3 tokens of same gemstone", () => {
+    // When
+    const pick = () =>
+      action(game, {
+        type: "pick",
+        tokens: [
+          GemStone.DIAMOND,
+          GemStone.DIAMOND,
+          GemStone.DIAMOND,
+        ],
+      });
+
+    // Then
+    assertThrows(pick);
+  });
+
+  it("should not be able to pick 2 tokens of same gemstone and token(s) of another gemstone", () => {
+    // When
+    const pick = () =>
+      action(game, {
+        type: "pick",
+        tokens: [
+          GemStone.DIAMOND,
+          GemStone.DIAMOND,
+          GemStone.EMERALD,
+        ],
+      });
+
+    // Then
+    assertThrows(pick);
+  });
+
+  it("should not be able to pick 2 tokens of same gemstone if there is less than 4 tokens of this gemstone remaining", () => {
+    // Given
+    const gameCopy = structuredClone(game);
+    gameCopy.tokens[GemStone.DIAMOND] = 3;
+
+    // When
+    const pick = () =>
+      action(gameCopy, {
+        type: "pick",
+        tokens: [
+          GemStone.DIAMOND,
+          GemStone.DIAMOND,
+        ],
+      });
+
+    // Then
+    assertThrows(pick);
+  });
+
+  it("should not be able to pick a token of a specific gemstone if there is no remaining token of this gemstone", () => {
+    // Given
+    const gameCopy = structuredClone(game);
+    gameCopy.tokens[GemStone.DIAMOND] = 0;
+
+    // When
+    const pick = () =>
+      action(gameCopy, {
+        type: "pick",
+        tokens: [
+          GemStone.DIAMOND,
+          GemStone.EMERALD,
+          GemStone.RUBY,
+        ],
+      });
+
+    // Then
+    assertThrows(pick);
   });
 });
