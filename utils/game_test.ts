@@ -4,7 +4,7 @@ import {
   describe,
   it,
 } from "https://deno.land/std@0.191.0/testing/bdd.ts";
-import { initializeGameFrom, prepareTokens } from "🛠️/game.ts";
+import { action, initializeGameFrom, prepareTokens } from "🛠️/game.ts";
 import { GemStone, SplendorGame } from "🛠️/types.ts";
 
 const testCases = [
@@ -62,14 +62,17 @@ describe("action available when it's your turn", () => {
 
   it("should allow player to pick different tokens", () => {
     // When
-    // pick(game, [GemStone.EMERALD, GemStone.DIAMOND, GemStone.SAPPHIRE]);
+    const updatedGame = action(game, {
+      type: "pick",
+      tokens: [GemStone.EMERALD, GemStone.DIAMOND, GemStone.SAPPHIRE],
+    });
 
     // Then
-    assertEquals(game.players[0].tokens[GemStone.EMERALD], 1);
-    assertEquals(game.players[0].tokens[GemStone.DIAMOND], 1);
-    assertEquals(game.players[0].tokens[GemStone.SAPPHIRE], 1);
-    assertEquals(game.tokens[GemStone.EMERALD], 6);
-    assertEquals(game.tokens[GemStone.DIAMOND], 6);
-    assertEquals(game.tokens[GemStone.SAPPHIRE], 6);
+    assertEquals(updatedGame.players[0].tokens[GemStone.EMERALD], 1);
+    assertEquals(updatedGame.players[0].tokens[GemStone.DIAMOND], 1);
+    assertEquals(updatedGame.players[0].tokens[GemStone.SAPPHIRE], 1);
+    assertEquals(updatedGame.tokens[GemStone.EMERALD], 6);
+    assertEquals(updatedGame.tokens[GemStone.DIAMOND], 6);
+    assertEquals(updatedGame.tokens[GemStone.SAPPHIRE], 6);
   });
 });

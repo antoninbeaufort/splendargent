@@ -1,11 +1,14 @@
 import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
+import { match } from "npm:ts-pattern";
 import { prepareCards } from "🛠️/cards.ts";
 import { cards } from "🛠️/cards.ts";
 import { prepareNobles } from "🛠️/nobles.ts";
 import {
   AllowedNumberOfPlayers,
+  Card,
   Game,
   GemStone,
+  Player,
   SplendorGame,
   User,
 } from "🛠️/types.ts";
@@ -24,11 +27,6 @@ const numberOfTokensByPlayersMap: Record<AllowedNumberOfPlayers, number> = {
 // 4 card of each level shown (until there is no enough)
 
 // player turn: 1 action between : pick - buy - reserve
-
-// pick:
-// 3 tokens with different color
-// min 4 tokens on stack to pick 2 of same color
-// a player cannot have more than 10 tokens at the end of his round he need to give away some token to be max 10
 
 // at the end of each player turn check for noble auto distribution and end condition (one distrubtion by player bu turn max)
 // end condition: the first player with 15 points or more end the game (we complete the tour until be just before the player that has started the game), then we count the points the ranking is done
@@ -91,6 +89,122 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
     decks,
     turn: players[0].user.id,
   };
+};
+
+type Action = { type: "pick"; tokens: GemStone[] } | {
+  type: "reserve";
+  card: Card;
+};
+
+const currentPlayerFrom = (game: SplendorGame): Player => {
+  const currentPlayer = game.players.find((player) =>
+    player.user.id === game.turn
+  );
+  if (!currentPlayer) {
+    throw new Error("Unable to find current player");
+  }
+
+  return currentPlayer;
+};
+
+const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
+  if (tokens.length > 3) {
+    throw new Error("you can't pick more than 3 tokens");
+  }
+  const gemStoneOccurences = tokens.reduce((acc, curr) => {
+    const objectKey = acc[curr];
+    if (!!objectKey) {
+      acc[curr] = objectKey + 1;
+    } else {
+      acc[curr] = 1;
+    }
+    return acc;
+  }, {} as Partial<Record<GemStone, number>>);
+  for (
+    const [gemStone, occurences] of Object.entries(gemStoneOccurences) as [
+      GemStone,
+      number,
+    ][]
+  ) {
+    if (game.tokens[gemStone] < occurences) {
+      throw new Error(`There are no enough tokens of the gemstone ${gemStone}`);
+    }
+  }
+
+  const isPickingOneTokenOfDifferentGemStones = Object.entries(
+    gemStoneOccurences,
+  ).every((
+    [_gemStone, occurences],
+  ) => occurences === 1);
+  if (isPickingOneTokenOfDifferentGemStones) {
+    return;
+  }
+
+  const isManyGemStoneOfSameType = Object.entries(gemStoneOccurences).some((
+    [_gemStone, occurences],
+  ) => occurences === 2);
+  if (isManyGemStoneOfSameType) {
+    if (Object.keys(gemStoneOccurences).length > 1) {
+      throw new Error(
+        "you can't pick more 2 tokens of a gemstone and multiple type of gemstone at the same time",
+      );
+    }
+    const numberOfDifferentGemStones = Object.keys(gemStoneOccurences).length;
+    if (numberOfDifferentGemStones > 1) {
+      throw new Error(
+        "you can't pick multiple gemstone while you're picking two tokens of the same gemstones",
+      );
+    }
+
+    if (game.tokens[tokens[0]] < 4) {
+      throw new Error(
+        "there are no enough token of this gemstone to pick 2 of them",
+      );
+    }
+
+    return;
+  }
+
+  throw new Error(
+    "impossible state, you should pick either 1 token of max 3 different gemstones or 2 tokens of a single gemstone if there are enough gemstones (4)",
+  );
+};
+
+// pick:
+// 3 tokens with different color
+// min 4 tokens on stack to pick 2 of same color
+// a player cannot have more than 10 tokens at the end of his round he need to give away some token to be max 10
+const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
+  assertPicking(game, tokens);
+
+  const currentPlayer = currentPlayerFrom(game);
+
+  for (const token of tokens) {
+    const playerToken = currentPlayer.tokens[token];
+    if (!!playerToken) {
+      currentPlayer.tokens[token] = playerToken + 1;
+    } else {
+      currentPlayer.tokens[token] = 1;
+    }
+    game.tokens[token]--;
+  }
+
+  return game;
+};
+
+const reserve = (game: SplendorGame, card: Card): SplendorGame => {
+  return game;
+};
+
+export const action = (game: SplendorGame, action: Action): SplendorGame => {
+  const gameCopy = structuredClone(game);
+
+  const updatedGame = match(action)
+    .with({ type: "pick" }, ({ tokens }) => pick(gameCopy, tokens))
+    .with({ type: "reserve" }, ({ card }) => reserve(gameCopy, card))
+    .exhaustive();
+
+  return updatedGame;
 };
 
 export interface GameStateInProgress {

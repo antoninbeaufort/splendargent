@@ -49,7 +49,7 @@ export type Noble = {
   requirements: Price;
 };
 
-type Player = {
+export type Player = {
   user: User;
   tokens: Price;
   cards: Card[];
