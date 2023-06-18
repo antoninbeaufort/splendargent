@@ -202,6 +202,14 @@ const assertCardVisible = (game: SplendorGame, card: Card) => {
   }
 };
 
+const playerGemStoneCardOwnedFrom = (
+  player: Player,
+  gemStone: GemStone,
+): number => {
+  return player.cards.filter((playerCard) => playerCard.symbol === gemStone)
+    .length;
+};
+
 const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
   for (
     const [gemStone, quantity] of Object.entries(card.price) as [
@@ -209,10 +217,16 @@ const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
       number,
     ][]
   ) {
-    const playerGemStoneQuantity = player.tokens[gemStone] ?? 0;
-    if (playerGemStoneQuantity < quantity) {
+    const playerGemStoneTokenQuantity = player.tokens[gemStone] ?? 0;
+    const playerGemStoneCardQuantity = playerGemStoneCardOwnedFrom(
+      player,
+      card.symbol,
+    );
+    const playerGemStoneTotalQuantity = playerGemStoneTokenQuantity +
+      playerGemStoneCardQuantity;
+    if (playerGemStoneTotalQuantity < quantity) {
       throw new Error(
-        `player has not enough ${gemStone}, he has ${playerGemStoneQuantity} while it need ${quantity}`,
+        `player has not enough ${gemStone}, he has ${playerGemStoneTotalQuantity} while it need ${quantity}`,
       );
     }
   }
@@ -229,8 +243,14 @@ const exchangeTokensForBuyCard = (
       number,
     ][]
   ) {
-    player.tokens[gemStone]! -= quantity;
-    game.tokens[gemStone]! += quantity;
+    const playerGemStoneCardOwned = playerGemStoneCardOwnedFrom(
+      player,
+      gemStone,
+    );
+    const quantityMinusPlayerGemStoneCardOwned = quantity -
+      playerGemStoneCardOwned;
+    player.tokens[gemStone]! -= quantityMinusPlayerGemStoneCardOwned;
+    game.tokens[gemStone]! += quantityMinusPlayerGemStoneCardOwned;
   }
 };
 
