@@ -37,12 +37,12 @@ export enum GemStone {
 
 type Price = Partial<Record<GemStone, number>>;
 
-export type Card = {
+export type Card = Readonly<{
   symbol: GemStone;
   points: number;
   level: 1 | 2 | 3;
   price: Price;
-};
+}>;
 
 export type Noble = {
   points: number;
@@ -62,7 +62,7 @@ export type AllowedNumberOfPlayers = 2 | 3 | 4;
 export type SplendorGame = {
   id: string;
   players: Player[];
-  visibleCards: Map<Card["level"], Card[]>;
+  visibleCards: Map<Card["level"], (Card | null)[]>;
   nobles: Noble[];
   tokens: Record<GemStone, number>;
   decks: Map<Card["level"], Card[]>; // TODO: make this private

@@ -1,4 +1,5 @@
 import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
+import { equal } from "https://deno.land/std@0.190.0/testing/asserts.ts";
 import { match } from "npm:ts-pattern";
 import { prepareCards } from "🛠️/cards.ts";
 import { cards } from "🛠️/cards.ts";
@@ -94,7 +95,7 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
 type Action = { type: "pick"; tokens: GemStone[] } | {
   type: "reserve";
   card: Card;
-};
+} | { type: "buy"; card: Card };
 
 const currentPlayerFrom = (game: SplendorGame): Player => {
   const currentPlayer = game.players.find((player) =>
@@ -113,7 +114,7 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
   }
   const gemStoneOccurences = tokens.reduce((acc, curr) => {
     const objectKey = acc[curr];
-    if (!!objectKey) {
+    if (objectKey) {
       acc[curr] = objectKey + 1;
     } else {
       acc[curr] = 1;
@@ -176,13 +177,80 @@ const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
 
   for (const token of tokens) {
     const playerToken = currentPlayer.tokens[token];
-    if (!!playerToken) {
+    if (playerToken) {
       currentPlayer.tokens[token] = playerToken + 1;
     } else {
       currentPlayer.tokens[token] = 1;
     }
     game.tokens[token]--;
   }
+
+  return game;
+};
+
+const assertCardVisible = (game: SplendorGame, card: Card) => {
+  const visibleCards = game.visibleCards.get(card.level);
+  if (!visibleCards) {
+    throw new Error("card not visible");
+  }
+  const isCardVisible = visibleCards.some((visibleCard) =>
+    equal(visibleCard, card)
+  );
+
+  if (!isCardVisible) {
+    throw new Error("card not visible");
+  }
+};
+
+const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
+  for (
+    const [gemStone, quantity] of Object.entries(card.price) as [
+      GemStone,
+      number,
+    ][]
+  ) {
+    const playerGemStoneQuantity = player.tokens[gemStone] ?? 0;
+    if (playerGemStoneQuantity < quantity) {
+      throw new Error(
+        `player has not enough ${gemStone}, he has ${playerGemStoneQuantity} while it need ${quantity}`,
+      );
+    }
+  }
+};
+
+const exchangeTokensForBuyCard = (
+  game: SplendorGame,
+  player: Player,
+  card: Card,
+) => {
+  for (
+    const [gemStone, quantity] of Object.entries(card.price) as [
+      GemStone,
+      number,
+    ][]
+  ) {
+    player.tokens[gemStone]! -= quantity;
+    game.tokens[gemStone]! += quantity;
+  }
+};
+
+const moveBoughtCard = (game: SplendorGame, player: Player, card: Card) => {
+  const visibleCardIndex = game.visibleCards.get(card.level)!.findIndex(
+    (visibleCard) => equal(visibleCard, card),
+  );
+  const replacementCard = game.decks.get(card.level)!.shift();
+  game.visibleCards.get(card.level)![visibleCardIndex] = replacementCard ??
+    null;
+  player.cards.push(card);
+};
+
+const buy = (game: SplendorGame, card: Card): SplendorGame => {
+  assertCardVisible(game, card);
+  const currentPlayer = currentPlayerFrom(game);
+  assertPlayerHasEnoughGemStone(currentPlayer, card);
+
+  exchangeTokensForBuyCard(game, currentPlayer, card);
+  moveBoughtCard(game, currentPlayer, card);
 
   return game;
 };
@@ -196,6 +264,7 @@ export const action = (game: SplendorGame, action: Action): SplendorGame => {
 
   const updatedGame = match(action)
     .with({ type: "pick" }, ({ tokens }) => pick(gameCopy, tokens))
+    .with({ type: "buy" }, ({ card }) => buy(gameCopy, card))
     .with({ type: "reserve" }, ({ card }) => reserve(gameCopy, card))
     .exhaustive();
 
