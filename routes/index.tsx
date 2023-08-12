@@ -40,7 +40,7 @@ export default function Home(props: PageProps<Data>) {
   return (
     <>
       <Head>
-        <title>Tic-Tac-Toe</title>
+        <title>Splendargent</title>
       </Head>
       <div class="px-4 py-8 mx-auto max-w-screen-md">
         <Header user={props.data?.user ?? null} />
@@ -71,40 +71,7 @@ function SignedIn(props: SignedInData) {
           Start Game
         </Button>
       </form>
-      <p class="my-6">
-        Or, challenge one of these other users:
-      </p>
-      <ul class="my-6">
-        {otherUsers.map((u) => <UserListItem key={u.id} user={u} />)}
-      </ul>
     </>
-  );
-}
-
-/** A list item to display a user. Includes a button to challenge the user to a
- * game. Displays name, handle, and avatar. */
-function UserListItem(props: { user: User }) {
-  const startPath = `/start?opponent=${props.user.login}`;
-  return (
-    <li class="flex items-center">
-      <img
-        class="w-8 h-8 mr-2 rounded-full"
-        src={props.user.avatarUrl}
-        alt={props.user.login}
-      />
-      <UserNameVertical class="flex-1" user={props.user} />
-      <form action={startPath} method="POST">
-        <ButtonLink
-          type="button"
-          class="my-2"
-          /** @ts-ignore */
-          onclick="event.preventDefault();this.closest('form').submit();"
-          href={startPath}
-        >
-          Start Game
-        </ButtonLink>
-      </form>
-    </li>
   );
 }
 
@@ -112,13 +79,11 @@ function SignedOut() {
   return (
     <>
       <p class="my-6">
-        Welcome to the Deno Tic-Tac-Toe game! You can log in with your GitHub
-        account below to challenge others to a game of Tic-Tac-Toe.
+        Welcome to the Splendargent game! You can log in with your GitHub
+        account below to challenge others to a game of Splendargent.
       </p>
       <p class="my-6">
-        <ButtonLink href="/auth/signin">
-          Log in with GitHub
-        </ButtonLink>
+        <ButtonLink href="/auth/signin">Log in with GitHub</ButtonLink>
       </p>
     </>
   );
