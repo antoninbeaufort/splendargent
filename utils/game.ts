@@ -32,7 +32,7 @@ const numberOfTokensByPlayersMap: Record<AllowedNumberOfPlayers, number> = {
 // at the end of each player turn check for noble auto distribution and end condition (one distrubtion by player bu turn max)
 // end condition: the first player with 15 points or more end the game (we complete the tour until be just before the player that has started the game), then we count the points the ranking is done
 
-const symbolColorMap = new Map([
+export const symbolColorMap = new Map([
   [GemStone.EMERALD, "#0d9344"],
   [GemStone.DIAMOND, "#f2f3f4"],
   [GemStone.SAPPHIRE, "#035cac"],
