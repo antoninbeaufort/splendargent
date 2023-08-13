@@ -1090,18 +1090,18 @@ const cardsBy = (givenCards: Card[], level: Card["level"]): Card[] => {
 };
 
 export const separateCards = (
-  givenCards: Card[],
-): Map<Card["level"], Card[]> => {
-  return new Map([
-    [1, cardsBy(givenCards, 1)] as const,
-    [2, cardsBy(givenCards, 2)] as const,
-    [3, cardsBy(givenCards, 3)] as const,
-  ]);
+  givenCards: Card[]
+): Record<Card["level"], Card[]> => {
+  return {
+    1: cardsBy(givenCards, 1),
+    2: cardsBy(givenCards, 2),
+    3: cardsBy(givenCards, 3),
+  };
 };
 
 export const prepareCards = (
-  givenCards: Card[],
-): Map<Card["level"], Card[]> => {
+  givenCards: Card[]
+): Record<Card["level"], Card[]> => {
   const shuffledCards = shuffle(givenCards);
 
   return separateCards(shuffledCards);

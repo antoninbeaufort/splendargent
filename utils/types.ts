@@ -23,7 +23,7 @@ export type GameGrid = [
   string | null,
   string | null,
   string | null,
-  string | null,
+  string | null
 ];
 
 export enum GemStone {
@@ -62,10 +62,10 @@ export type AllowedNumberOfPlayers = 2 | 3 | 4;
 export type SplendorGame = {
   id: string;
   players: Player[];
-  visibleCards: Map<Card["level"], (Card | null)[]>;
+  visibleCards: Record<Card["level"], (Card | null)[]>;
   nobles: Noble[];
   tokens: Record<GemStone, number>;
-  decks: Map<Card["level"], Card[]>; // TODO: make this private
+  decks: Record<Card["level"], Card[]>; // TODO: make this private
   turn: Player["user"]["id"];
 };
 

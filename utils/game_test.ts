@@ -29,7 +29,7 @@ testCases.map(({ numberOfPlayers, expectedNumberOfTokens }) => {
       assertEquals(tokens[GemStone.SAPPHIRE], expectedNumberOfTokens);
       assertEquals(tokens[GemStone.ONYX], expectedNumberOfTokens);
       assertEquals(tokens[GemStone.RUBY], expectedNumberOfTokens);
-    },
+    }
   );
 });
 
@@ -239,7 +239,7 @@ describe("buy when it's your turn", () => {
     // When
     const updatedGame = action(game, {
       type: "buy",
-      card: game.visibleCards.get(1)![0]!,
+      card: game.visibleCards[1][0]!,
     });
 
     // Then
@@ -254,21 +254,21 @@ describe("buy when it's your turn", () => {
     assertEquals(updatedGame.tokens[GemStone.EMERALD], 7);
     assertEquals(updatedGame.tokens[GemStone.RUBY], 7);
     assertEquals(updatedGame.tokens[GemStone.ONYX], 6);
-    assertEquals(updatedGame.visibleCards.get(1)![0], cards[4]);
+    assertEquals(updatedGame.visibleCards[1][0], cards[4]);
   });
 
   it("should cost price minus cards gemstones already owned", () => {
     // Given
     const gameCopy = structuredClone(game);
     const diamondCard = cards.findLast(
-      (card) => card.symbol === GemStone.DIAMOND,
+      (card) => card.symbol === GemStone.DIAMOND
     )!;
     gameCopy.players[0].cards = [diamondCard];
 
     // When
     const updatedGame = action(gameCopy, {
       type: "buy",
-      card: game.visibleCards.get(1)![0]!,
+      card: game.visibleCards[1][0]!,
     });
 
     // Then
@@ -283,6 +283,6 @@ describe("buy when it's your turn", () => {
     assertEquals(updatedGame.tokens[GemStone.EMERALD], 7);
     assertEquals(updatedGame.tokens[GemStone.RUBY], 7);
     assertEquals(updatedGame.tokens[GemStone.ONYX], 6);
-    assertEquals(updatedGame.visibleCards.get(1)![0], cards[4]);
+    assertEquals(updatedGame.visibleCards[1][0], cards[4]);
   });
 });

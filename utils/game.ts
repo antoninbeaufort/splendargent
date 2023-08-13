@@ -68,11 +68,11 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
   const decks = prepareCards(cards);
   const nobles = prepareNobles(numberOfPlayers);
   const tokens = prepareTokens(numberOfPlayers);
-  const visibleCards = new Map([
-    [1, decks.get(1)!.splice(0, 4)] as const,
-    [2, decks.get(2)!.splice(0, 4)] as const,
-    [3, decks.get(3)!.splice(0, 4)] as const,
-  ]);
+  const visibleCards = {
+    1: decks[1].splice(0, 4),
+    2: decks[2].splice(0, 4),
+    3: decks[3].splice(0, 4),
+  };
   const shuffledUsers = shuffle(users);
   const players = shuffledUsers.map((user) => ({
     user,
@@ -188,7 +188,7 @@ const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
 };
 
 const assertCardVisible = (game: SplendorGame, card: Card) => {
-  const visibleCards = game.visibleCards.get(card.level);
+  const visibleCards = game.visibleCards[card.level];
   if (!visibleCards) {
     throw new Error("card not visible");
   }
@@ -250,12 +250,11 @@ const exchangeTokensForBuyCard = (
 };
 
 const moveBoughtCard = (game: SplendorGame, player: Player, card: Card) => {
-  const visibleCardIndex = game.visibleCards
-    .get(card.level)!
-    .findIndex((visibleCard) => equal(visibleCard, card));
-  const replacementCard = game.decks.get(card.level)!.shift();
-  game.visibleCards.get(card.level)![visibleCardIndex] =
-    replacementCard ?? null;
+  const visibleCardIndex = game.visibleCards[card.level].findIndex(
+    (visibleCard) => equal(visibleCard, card)
+  );
+  const replacementCard = game.decks[card.level].shift();
+  game.visibleCards[card.level][visibleCardIndex] = replacementCard ?? null;
   player.cards.push(card);
 };
 
