@@ -92,7 +92,7 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
   };
 };
 
-type Action =
+export type Action =
   | { type: "pick"; tokens: GemStone[] }
   | {
       type: "reserve";

@@ -3,9 +3,9 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import * as $0 from "./routes/_middleware.tsx";
-import * as $1 from "./routes/api/events/game.ts";
-import * as $2 from "./routes/api/events/games.ts";
-import * as $3 from "./routes/api/place.ts";
+import * as $1 from "./routes/api/action.ts";
+import * as $2 from "./routes/api/events/game.ts";
+import * as $3 from "./routes/api/events/games.ts";
 import * as $4 from "./routes/auth/oauth2callback.ts";
 import * as $5 from "./routes/auth/signin.ts";
 import * as $6 from "./routes/auth/signout.ts";
@@ -17,9 +17,9 @@ import * as $$0 from "./islands/GameDisplay.tsx";
 const manifest = {
   routes: {
     "./routes/_middleware.tsx": $0,
-    "./routes/api/events/game.ts": $1,
-    "./routes/api/events/games.ts": $2,
-    "./routes/api/place.ts": $3,
+    "./routes/api/action.ts": $1,
+    "./routes/api/events/game.ts": $2,
+    "./routes/api/events/games.ts": $3,
     "./routes/auth/oauth2callback.ts": $4,
     "./routes/auth/signin.ts": $5,
     "./routes/auth/signout.ts": $6,

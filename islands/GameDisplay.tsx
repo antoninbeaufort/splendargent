@@ -2,7 +2,7 @@ import { useState } from "preact/hooks";
 import { tw } from "twind";
 
 import { Card, Game, GemStone, Noble, SplendorGame, User } from "🛠️/types.ts";
-import { GameState, assertPicking, symbolColorMap } from "🛠️/game.ts";
+import { Action, GameState, assertPicking, symbolColorMap } from "🛠️/game.ts";
 import { useDataSubscription } from "🛠️/hooks.ts";
 
 import { UserNameHorizontal, UserNameVertical } from "🧱/User.tsx";
@@ -83,9 +83,10 @@ export default function GameDisplay(props: {
       </div>
 
       <div class="max-w-md mx-auto flex flex-col gap-y-4">
+        {JSON.stringify(game.players[0].tokens, null, 2)}
         <Nobles nobles={game.nobles} />
         <VisibleCards visibleCards={game.visibleCards} />
-        <Tokens tokens={game.tokens} />
+        <Tokens tokens={game.tokens} gameId={game.id} />
       </div>
     </>
   );
@@ -192,38 +193,40 @@ function NobleCard(props: { noble: Noble }) {
   );
 }
 
-function Tokens(props: { tokens: Record<GemStone, number> }) {
-  const [selectedTokens, setSelectedTokens] = useState<
-    Record<GemStone, number>
-  >(
-    Object.fromEntries(
+function Tokens(props: { tokens: Record<GemStone, number>; gameId: string }) {
+  const getInitialSelectedTokens = () => {
+    return Object.fromEntries(
       (Object.entries(props.tokens) as [GemStone, number][]).map(
         ([gemStone]) => [gemStone, 0]
       )
-    ) as Record<GemStone, number>
-  );
+    ) as Record<GemStone, number>;
+  };
+
+  const [selectedTokens, setSelectedTokens] = useState<
+    Record<GemStone, number>
+  >(getInitialSelectedTokens());
 
   const [currentTokens, setCurrentTokens] = useState<Record<GemStone, number>>({
     ...props.tokens,
   });
-  const selectToken = (gemStone: GemStone) => {
-    const buildSelectedTokensArray = () => {
-      const result: GemStone[] = [];
-      for (const [gemStone, count] of Object.entries(selectedTokens) as [
-        GemStone,
-        number
-      ][]) {
-        for (const _ of Array(count).keys()) {
-          result.push(gemStone);
-        }
+
+  const buildSelectedTokensArray = () => {
+    const result: GemStone[] = [];
+    for (const [gemStone, count] of Object.entries(selectedTokens) as [
+      GemStone,
+      number
+    ][]) {
+      for (const _ of Array(count).keys()) {
+        result.push(gemStone);
       }
-      result.push(gemStone);
+    }
 
-      return result;
-    };
+    return result;
+  };
 
+  const selectToken = (gemStone: GemStone) => {
     try {
-      assertPicking(props.tokens, buildSelectedTokensArray());
+      assertPicking(props.tokens, [...buildSelectedTokensArray(), gemStone]);
     } catch (error) {
       alert(error.message);
       return;
@@ -253,23 +256,47 @@ function Tokens(props: { tokens: Record<GemStone, number> }) {
     });
   };
 
+  const pick = async () => {
+    const action: Action = {
+      type: "pick",
+      tokens: buildSelectedTokensArray(),
+    };
+    const res = await fetch(`/api/action?id=${props.gameId}`, {
+      method: "POST",
+      body: JSON.stringify(action),
+    });
+    if (res.status !== 200) {
+      alert("Something went wrong");
+      return;
+    }
+
+    setSelectedTokens(getInitialSelectedTokens());
+  };
+
   return (
-    <div class="flex gap-x-2 justify-center">
-      {(Object.entries(currentTokens) as [GemStone, number][]).map(
-        ([gemStone, count]) => (
-          <div>
-            <Price
-              gemStone={gemStone}
-              count={count}
-              size={12}
-              onClick={() => selectToken(gemStone)}
-            />
-            <div class="text-center" onClick={() => removeToken(gemStone)}>
-              {selectedTokens[gemStone]}
+    <div>
+      <div class="flex gap-x-2 justify-center">
+        {(Object.entries(currentTokens) as [GemStone, number][]).map(
+          ([gemStone, count]) => (
+            <div>
+              <Price
+                gemStone={gemStone}
+                count={count}
+                size={12}
+                onClick={() => selectToken(gemStone)}
+              />
+              <div class="text-center" onClick={() => removeToken(gemStone)}>
+                {selectedTokens[gemStone]}
+              </div>
             </div>
-          </div>
-        )
-      )}
+          )
+        )}
+      </div>
+      <div class="flex justify-center">
+        <button class="bg-gray-100 p-2 rounded-lg" onClick={pick}>
+          Pick
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { Handlers } from "$fresh/server.ts";
 import { getGameWithVersionstamp, getUserBySession, setGame } from "🛠️/db.ts";
-import { analyzeGame } from "🛠️/game.ts";
 import { State } from "🛠️/types.ts";
+import { Action, action } from "🛠️/game.ts";
 
 export const handler: Handlers<undefined, State> = {
   async POST(req, ctx) {
@@ -12,13 +12,7 @@ export const handler: Handlers<undefined, State> = {
         status: 400,
       });
     }
-    const indexStr = url.searchParams.get("index");
-    const index = Number(indexStr);
-    if (!indexStr || index < 0 || index > 8) {
-      return new Response("Invalid index", {
-        status: 400,
-      });
-    }
+
     const [gameRes, user] = await Promise.all([
       getGameWithVersionstamp(id),
       getUserBySession(ctx.state.session ?? ""),
@@ -34,30 +28,23 @@ export const handler: Handlers<undefined, State> = {
         status: 401,
       });
     }
-    const analysis = analyzeGame(game);
-    if (analysis.state !== "in_progress") {
-      return new Response("Game over", {
-        status: 400,
-      });
-    }
-    if (analysis.turn !== user.id) {
+
+    if (game.turn !== user.id) {
       return new Response("Not your turn", {
         status: 403,
       });
     }
-    if (game.grid[index] !== null) {
-      return new Response("Invalid move", {
-        status: 400,
-      });
-    }
-    game.grid[index] = user.id;
-    const success = await setGame(game, gameVersionstamp);
+
+    const actionFromPayload = (await req.json()) as Action;
+    const updatedGame = action(game, actionFromPayload);
+
+    const success = await setGame(updatedGame, gameVersionstamp);
     if (!success) {
       return new Response("Game has been updated/deleted while processing", {
         status: 409,
       });
     }
-    return new Response(JSON.stringify(game), {
+    return new Response(JSON.stringify(updatedGame), {
       headers: {
         "Content-Type": "application/json",
       },
