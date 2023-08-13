@@ -1,7 +1,15 @@
 import { useEffect, useState } from "preact/hooks";
 import { tw } from "twind";
 
-import { Card, Game, GemStone, Noble, SplendorGame, User } from "🛠️/types.ts";
+import {
+  Card,
+  Game,
+  GemStone,
+  Noble,
+  Player,
+  SplendorGame,
+  User,
+} from "🛠️/types.ts";
 import { Action, GameState, assertPicking, symbolColorMap } from "🛠️/game.ts";
 import { useDataSubscription } from "🛠️/hooks.ts";
 
@@ -30,36 +38,21 @@ export default function GameDisplay(props: {
   const state = "in_progress";
 
   const isPlayerTurn = game.turn === user?.id;
+  const getPlayerPoints = (player: Player): number => {
+    const pointsFromCards = player.cards.reduce((acc, curr) => {
+      return acc + curr.points;
+    }, 0);
+    const pointsFromNobles = player.nobles.reduce((acc, curr) => {
+      return acc + curr.points;
+    }, 0);
+
+    return pointsFromCards + pointsFromNobles;
+  };
 
   return (
     <>
-      <div class="grid sm:grid-cols-2 w-full mt-6 border(t l r) rounded(tl-xl tr-xl) overflow-hidden">
-        <div
-          class={`flex justify-between items-center gap-4 p-4 border-b sm:border-r`}
-        >
-          <img
-            class="w-16 h-16 rounded-full"
-            src={game.players[0].user.avatarUrl}
-            alt={game.players[0].user.name}
-          />
-          <UserNameVertical user={game.players[0].user} class="w-full" />
-          <div class="text-2xl mx-2">❌</div>
-        </div>
-        <div class={tw`flex items-center justify-between gap-4 p-4 border-b`}>
-          <div class="text-2xl mx-2">⭕</div>
-          <UserNameVertical
-            user={game.players[1].user}
-            class="text-right w-full"
-          />
-          <img
-            class="w-16 h-16 rounded-full"
-            src={game.players[1].user.avatarUrl}
-            alt={game.players[1].user.name}
-          />
-        </div>
-      </div>
       <div
-        class={tw`border(b l r) rounded(bl-xl br-xl) mb-6 text-xl sm:text-2xl text-center p-4 ${
+        class={tw`border rounded-xl my-6 text-xl sm:text-2xl text-center p-4 ${
           state === "in_progress" && game.turn === user?.id && rainbowBackground
         }`}
       >
@@ -84,17 +77,79 @@ export default function GameDisplay(props: {
         {/* {state === "tie" && <>Tie!</>} */}
       </div>
 
-      <div class="max-w-md mx-auto flex flex-col gap-y-4">
-        {JSON.stringify(game.players[0].tokens, null, 2)}
-        <Nobles nobles={game.nobles} />
-        <VisibleCards visibleCards={game.visibleCards} />
-        <Tokens
-          tokens={game.tokens}
-          gameId={game.id}
-          isPlayerTurn={isPlayerTurn}
-        />
+      <div class="flex gap-x-4">
+        <div class="max-w-md mx-auto flex flex-col gap-y-4">
+          <Nobles nobles={game.nobles} />
+          <VisibleCards visibleCards={game.visibleCards} />
+          <Tokens
+            tokens={game.tokens}
+            gameId={game.id}
+            isPlayerTurn={isPlayerTurn}
+          />
+        </div>
+        <div class="w-full border rounded-xl overflow-hidden">
+          {game.players.map((player) => (
+            <div class="border-b p-4">
+              <div class={`flex justify-between items-center gap-4`}>
+                <img
+                  class="w-16 h-16 rounded-full"
+                  src={player.user.avatarUrl}
+                  alt={player.user.name}
+                />
+                <UserNameVertical user={player.user} class="w-full" />
+              </div>
+              <div class="flex">
+                <div>
+                  <PlayerTokens tokens={player.tokens} />
+                  <PlayerCardsPoints cards={player.cards} />
+                </div>
+                <div class="flex justify-end text-center flex-grow mr-4">
+                  <div class="flex items-center">
+                    <p class="text-3xl">{getPlayerPoints(player)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </>
+  );
+}
+
+function PlayerTokens(props: { tokens: Partial<Record<GemStone, number>> }) {
+  const tokensEntries = Object.entries(props.tokens) as [GemStone, number][];
+
+  return (
+    <div class="flex mt-2 gap-x-1">
+      {tokensEntries.map(([gemStone, count]) => (
+        <Price gemStone={gemStone} count={count} />
+      ))}
+    </div>
+  );
+}
+
+function PlayerCardsPoints(props: { cards: Card[] }) {
+  const gemStoneOccurences = props.cards.reduce((acc, curr) => {
+    const objectKey = acc[curr.symbol];
+    if (objectKey) {
+      acc[curr.symbol] = objectKey + 1;
+    } else {
+      acc[curr.symbol] = 1;
+    }
+    return acc;
+  }, {} as Partial<Record<GemStone, number>>);
+  const tokensEntries = Object.entries(gemStoneOccurences) as [
+    GemStone,
+    number
+  ][];
+
+  return (
+    <div class="flex mt-2 gap-x-1">
+      {tokensEntries.map(([gemStone, count]) => (
+        <Price gemStone={gemStone} count={count} rounded="rounded" />
+      ))}
+    </div>
   );
 }
 
@@ -207,10 +262,23 @@ function Tokens(props: {
   gameId: string;
   isPlayerTurn: boolean;
 }) {
+  const getTokensMinusSelectedOnes = (): Record<GemStone, number> => {
+    return {
+      [GemStone.EMERALD]:
+        props.tokens[GemStone.EMERALD] - selectedTokens[GemStone.EMERALD],
+      [GemStone.DIAMOND]:
+        props.tokens[GemStone.DIAMOND] - selectedTokens[GemStone.DIAMOND],
+      [GemStone.SAPPHIRE]:
+        props.tokens[GemStone.SAPPHIRE] - selectedTokens[GemStone.SAPPHIRE],
+      [GemStone.ONYX]:
+        props.tokens[GemStone.ONYX] - selectedTokens[GemStone.ONYX],
+      [GemStone.RUBY]:
+        props.tokens[GemStone.RUBY] - selectedTokens[GemStone.RUBY],
+    };
+  };
+
   useEffect(() => {
-    setCurrentTokens({
-      ...props.tokens,
-    });
+    setCurrentTokens(getTokensMinusSelectedOnes());
   });
 
   const getInitialSelectedTokens = () => {

@@ -3,7 +3,7 @@ import { User } from "🛠️/types.ts";
 export function UserNameVertical(props: { class?: string; user: User }) {
   return (
     <div class={props.class}>
-      <div class="text-lg font-semibold">
+      <div class="font-semibold">
         {props.user.name || `@${props.user.login}`}
       </div>
       {props.user.name && (
