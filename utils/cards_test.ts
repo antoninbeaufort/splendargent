@@ -48,7 +48,7 @@ Deno.test("should separate cards by level", () => {
   const separatedCards = separateCards(cards);
 
   // Then
-  assertEquals(separatedCards.get(1), [
+  assertEquals(separatedCards[1], [
     {
       symbol: GemStone.DIAMOND,
       points: 0,
@@ -62,7 +62,7 @@ Deno.test("should separate cards by level", () => {
       },
     },
   ]);
-  assertEquals(separatedCards.get(2), [
+  assertEquals(separatedCards[2], [
     {
       symbol: GemStone.EMERALD,
       points: 1,
@@ -76,7 +76,7 @@ Deno.test("should separate cards by level", () => {
       },
     },
   ]);
-  assertEquals(separatedCards.get(3), [
+  assertEquals(separatedCards[3], [
     {
       symbol: GemStone.RUBY,
       points: 5,

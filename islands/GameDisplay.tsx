@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { tw } from "twind";
 
 import { Card, Game, GemStone, Noble, SplendorGame, User } from "🛠️/types.ts";
@@ -28,6 +28,8 @@ export default function GameDisplay(props: {
 
   // here was the game analysis
   const state = "in_progress";
+
+  const isPlayerTurn = game.turn === user?.id;
 
   return (
     <>
@@ -65,7 +67,7 @@ export default function GameDisplay(props: {
           <>{state.winner === game.initiator.id ? "❌" : "⭕"} wins!</>
         )} */}
         {state === "in_progress" &&
-          (game.turn === user?.id ? (
+          (isPlayerTurn ? (
             <>Your turn!</>
           ) : (
             <>
@@ -86,7 +88,11 @@ export default function GameDisplay(props: {
         {JSON.stringify(game.players[0].tokens, null, 2)}
         <Nobles nobles={game.nobles} />
         <VisibleCards visibleCards={game.visibleCards} />
-        <Tokens tokens={game.tokens} gameId={game.id} />
+        <Tokens
+          tokens={game.tokens}
+          gameId={game.id}
+          isPlayerTurn={isPlayerTurn}
+        />
       </div>
     </>
   );
@@ -148,10 +154,12 @@ function Price(props: {
   size?: number;
   rounded?: string;
   onClick?: any;
+  hiddenOnNoCount?: boolean;
 }) {
-  if (!props.count) return null;
   const sizeOrDefault = props.size ?? 6;
   const roundedOrDefault = props.rounded ?? "rounded-full";
+
+  if (!props.count && !props.hiddenOnNoCount) return null;
 
   return (
     <div
@@ -159,8 +167,9 @@ function Price(props: {
         sizeOrDefault / 3
       } pt-${sizeOrDefault / 2 - 3} ${roundedOrDefault} font-bold ${
         props.gemStone === GemStone.DIAMOND ? "" : "text-white"
-      }`}
+      } ${!props.count ? "invisible" : ""}`}
       style={{ backgroundColor: symbolColorMap.get(props.gemStone) }}
+      disabled={!props.count}
       onClick={props.onClick}
     >
       {props.count}
@@ -193,7 +202,17 @@ function NobleCard(props: { noble: Noble }) {
   );
 }
 
-function Tokens(props: { tokens: Record<GemStone, number>; gameId: string }) {
+function Tokens(props: {
+  tokens: Record<GemStone, number>;
+  gameId: string;
+  isPlayerTurn: boolean;
+}) {
+  useEffect(() => {
+    setCurrentTokens({
+      ...props.tokens,
+    });
+  });
+
   const getInitialSelectedTokens = () => {
     return Object.fromEntries(
       (Object.entries(props.tokens) as [GemStone, number][]).map(
@@ -284,6 +303,7 @@ function Tokens(props: { tokens: Record<GemStone, number>; gameId: string }) {
                 count={count}
                 size={12}
                 onClick={() => selectToken(gemStone)}
+                hiddenOnNoCount
               />
               <div class="text-center" onClick={() => removeToken(gemStone)}>
                 {selectedTokens[gemStone]}
@@ -292,11 +312,13 @@ function Tokens(props: { tokens: Record<GemStone, number>; gameId: string }) {
           )
         )}
       </div>
-      <div class="flex justify-center">
-        <button class="bg-gray-100 p-2 rounded-lg" onClick={pick}>
-          Pick
-        </button>
-      </div>
+      {props.isPlayerTurn ? (
+        <div class="flex justify-center">
+          <button class="bg-gray-100 p-2 rounded-lg" onClick={pick}>
+            Pick
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

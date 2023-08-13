@@ -276,6 +276,17 @@ const reserve = (game: SplendorGame, card: Card): SplendorGame => {
   return game;
 };
 
+const getNextPlayer = (game: SplendorGame): string => {
+  const currentPlayerIndex = game.players.findIndex(
+    (player) => player.user.id === game.turn
+  );
+  if (currentPlayerIndex === -1) {
+    throw new Error("current player index not found");
+  }
+
+  return game.players[(currentPlayerIndex + 1) % game.players.length].user.id;
+};
+
 export const action = (game: SplendorGame, action: Action): SplendorGame => {
   const gameCopy = structuredClone(game);
 
@@ -284,6 +295,8 @@ export const action = (game: SplendorGame, action: Action): SplendorGame => {
     .with({ type: "buy" }, ({ card }) => buy(gameCopy, card))
     .with({ type: "reserve" }, ({ card }) => reserve(gameCopy, card))
     .exhaustive();
+
+  updatedGame.turn = getNextPlayer(updatedGame);
 
   return updatedGame;
 };

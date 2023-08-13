@@ -80,6 +80,17 @@ describe("pick when it's your turn", () => {
     assertEquals(updatedGame.tokens[GemStone.SAPPHIRE], 6);
   });
 
+  it("should pass turn to next player after an action", () => {
+    // When
+    const updatedGame = action(game, {
+      type: "pick",
+      tokens: [GemStone.EMERALD, GemStone.DIAMOND, GemStone.SAPPHIRE],
+    });
+
+    // Then
+    assertEquals(updatedGame.turn, updatedGame.players[1].user.id);
+  });
+
   it("should allow player to pick 2 tokens of same gemstone", () => {
     // When
     const updatedGame = action(game, {
