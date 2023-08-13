@@ -80,7 +80,7 @@ export default function GameDisplay(props: {
       <div class="flex gap-x-4">
         <div class="max-w-md mx-auto flex flex-col gap-y-4">
           <Nobles nobles={game.nobles} />
-          <VisibleCards visibleCards={game.visibleCards} />
+          <VisibleCards visibleCards={game.visibleCards} gameId={game.id} />
           <Tokens
             tokens={game.tokens}
             gameId={game.id}
@@ -155,6 +155,7 @@ function PlayerCardsPoints(props: { cards: Card[] }) {
 
 function VisibleCards(props: {
   visibleCards: Record<Card["level"], (Card | null)[]>;
+  gameId: string;
 }) {
   const rows = (
     Object.entries(props.visibleCards) as [string, (Card | null)[]][]
@@ -167,28 +168,46 @@ function VisibleCards(props: {
   return (
     <div class="flex flex-col gap-y-8">
       {orderedRows.map(([_level, cards]) => (
-        <Row cards={cards} />
+        <Row cards={cards} gameId={props.gameId} />
       ))}
     </div>
   );
 }
 
-function Row(props: { cards: (Card | null)[] }) {
+function Row(props: { cards: (Card | null)[]; gameId: string }) {
   return (
     <div class="flex gap-x-2">
       {props.cards.map((card) => (
-        <Card card={card} />
+        <Card card={card} gameId={props.gameId} />
       ))}
     </div>
   );
 }
 
-function Card(props: { card: Card | null }) {
+function Card(props: { card: Card | null; gameId: string }) {
   if (!props.card) {
     return <div class="bg-gray-800 w-32 h-48 rounded-lg"></div>;
   }
+
+  const buy = async () => {
+    const action: Action = {
+      type: "buy",
+      card: props.card!,
+    };
+    const res = await fetch(`/api/action?id=${props.gameId}`, {
+      method: "POST",
+      body: JSON.stringify(action),
+    });
+    if (res.status !== 200) {
+      alert("Something went wrong");
+    }
+  };
+
   return (
-    <div class="bg-gray-200 w-32 h-48 rounded-lg flex flex-col p-1">
+    <div
+      class="bg-gray-200 w-32 h-48 rounded-lg flex flex-col p-1"
+      onClick={buy}
+    >
       <div>
         {props.card.points} - {props.card.symbol}
       </div>

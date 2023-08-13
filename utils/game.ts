@@ -220,7 +220,7 @@ const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
     const playerGemStoneTokenQuantity = player.tokens[gemStone] ?? 0;
     const playerGemStoneCardQuantity = playerGemStoneCardOwnedFrom(
       player,
-      card.symbol
+      gemStone
     );
     const playerGemStoneTotalQuantity =
       playerGemStoneTokenQuantity + playerGemStoneCardQuantity;
