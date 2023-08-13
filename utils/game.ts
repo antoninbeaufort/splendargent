@@ -111,7 +111,10 @@ const currentPlayerFrom = (game: SplendorGame): Player => {
   return currentPlayer;
 };
 
-const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
+export const assertPicking = (
+  gameTokens: Record<GemStone, number>,
+  tokens: GemStone[]
+) => {
   if (tokens.length > 3) {
     throw new Error("you can't pick more than 3 tokens");
   }
@@ -128,7 +131,7 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
     GemStone,
     number
   ][]) {
-    if (game.tokens[gemStone] < occurences) {
+    if (gameTokens[gemStone] < occurences) {
       throw new Error(`There are no enough tokens of the gemstone ${gemStone}`);
     }
   }
@@ -151,7 +154,7 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
       );
     }
 
-    if (game.tokens[tokens[0]] < 4) {
+    if (gameTokens[tokens[0]] < 4) {
       throw new Error(
         "there are no enough token of this gemstone to pick 2 of them"
       );
@@ -170,7 +173,7 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
 // min 4 tokens on stack to pick 2 of same color
 // a player cannot have more than 10 tokens at the end of his round he need to give away some token to be max 10
 const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
-  assertPicking(game, tokens);
+  assertPicking(game.tokens, tokens);
 
   const currentPlayer = currentPlayerFrom(game);
 

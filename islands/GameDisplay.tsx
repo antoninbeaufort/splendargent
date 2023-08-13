@@ -2,7 +2,7 @@ import { useState } from "preact/hooks";
 import { tw } from "twind";
 
 import { Card, Game, GemStone, Noble, SplendorGame, User } from "🛠️/types.ts";
-import { GameState, symbolColorMap } from "🛠️/game.ts";
+import { GameState, assertPicking, symbolColorMap } from "🛠️/game.ts";
 import { useDataSubscription } from "🛠️/hooks.ts";
 
 import { UserNameHorizontal, UserNameVertical } from "🧱/User.tsx";
@@ -146,6 +146,7 @@ function Price(props: {
   count: number;
   size?: number;
   rounded?: string;
+  onClick?: any;
 }) {
   if (!props.count) return null;
   const sizeOrDefault = props.size ?? 6;
@@ -159,6 +160,7 @@ function Price(props: {
         props.gemStone === GemStone.DIAMOND ? "" : "text-white"
       }`}
       style={{ backgroundColor: symbolColorMap.get(props.gemStone) }}
+      onClick={props.onClick}
     >
       {props.count}
     </div>
@@ -191,11 +193,81 @@ function NobleCard(props: { noble: Noble }) {
 }
 
 function Tokens(props: { tokens: Record<GemStone, number> }) {
+  const [selectedTokens, setSelectedTokens] = useState<
+    Record<GemStone, number>
+  >(
+    Object.fromEntries(
+      (Object.entries(props.tokens) as [GemStone, number][]).map(
+        ([gemStone]) => [gemStone, 0]
+      )
+    ) as Record<GemStone, number>
+  );
+
+  const [currentTokens, setCurrentTokens] = useState<Record<GemStone, number>>({
+    ...props.tokens,
+  });
+  const selectToken = (gemStone: GemStone) => {
+    const buildSelectedTokensArray = () => {
+      const result: GemStone[] = [];
+      for (const [gemStone, count] of Object.entries(selectedTokens) as [
+        GemStone,
+        number
+      ][]) {
+        for (const _ of Array(count).keys()) {
+          result.push(gemStone);
+        }
+      }
+      result.push(gemStone);
+
+      return result;
+    };
+
+    try {
+      assertPicking(props.tokens, buildSelectedTokensArray());
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
+
+    setSelectedTokens({
+      ...selectedTokens,
+      [gemStone]: selectedTokens[gemStone] + 1,
+    });
+    setCurrentTokens({
+      ...currentTokens,
+      [gemStone]: currentTokens[gemStone] - 1,
+    });
+  };
+  const removeToken = (gemStone: GemStone) => {
+    if (!selectedTokens) {
+      return;
+    }
+
+    setSelectedTokens({
+      ...selectedTokens,
+      [gemStone]: selectedTokens[gemStone] - 1,
+    });
+    setCurrentTokens({
+      ...currentTokens,
+      [gemStone]: currentTokens[gemStone] + 1,
+    });
+  };
+
   return (
     <div class="flex gap-x-2 justify-center">
-      {(Object.entries(props.tokens) as [GemStone, number][]).map(
+      {(Object.entries(currentTokens) as [GemStone, number][]).map(
         ([gemStone, count]) => (
-          <Price gemStone={gemStone} count={count} size={12} />
+          <div>
+            <Price
+              gemStone={gemStone}
+              count={count}
+              size={12}
+              onClick={() => selectToken(gemStone)}
+            />
+            <div class="text-center" onClick={() => removeToken(gemStone)}>
+              {selectedTokens[gemStone]}
+            </div>
+          </div>
         )
       )}
     </div>
