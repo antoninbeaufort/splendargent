@@ -4,12 +4,12 @@
  * synchronization between clients.
  */
 
-import { Game, OauthSession, User } from "🛠️/types.ts";
+import { OauthSession, SplendorGame, User } from "🛠️/types.ts";
 
 const kv = await Deno.openKv();
 
 export async function getAndDeleteOauthSession(
-  session: string,
+  session: string
 ): Promise<OauthSession | null> {
   const res = await kv.get<OauthSession>(["oauth_sessions", session]);
   if (res.versionstamp === null) return null;
@@ -22,7 +22,8 @@ export async function setOauthSession(session: string, value: OauthSession) {
 }
 
 export async function setUserWithSession(user: User, session: string) {
-  await kv.atomic()
+  await kv
+    .atomic()
     .set(["users", user.id], user)
     .set(["users_by_login", user.login], user)
     .set(["users_by_session", session], user)
@@ -51,33 +52,43 @@ export async function deleteSession(session: string) {
 
 export async function listRecentlySignedInUsers(): Promise<User[]> {
   const users = [];
-  const iter = kv.list<User>({ prefix: ["users_by_last_signin"] }, {
-    limit: 10,
-    reverse: true,
-  });
+  const iter = kv.list<User>(
+    { prefix: ["users_by_last_signin"] },
+    {
+      limit: 10,
+      reverse: true,
+    }
+  );
   for await (const { value } of iter) {
     users.push(value);
   }
   return users;
 }
 
-export async function setGame(game: Game, versionstamp?: string) {
+export async function setGame(game: SplendorGame, versionstamp?: string) {
   const ao = kv.atomic();
   if (versionstamp) {
     ao.check({ key: ["games", game.id], versionstamp });
   }
-  const res = await ao
-    .set(["games", game.id], game)
-    .set(["games_by_user", game.initiator.id, game.id], game)
-    .set(["games_by_user", game.opponent.id, game.id], game)
-    .commit();
+  ao.set(["games", game.id], game);
+  for (const { user } of game.players) {
+    ao.set(["games_by_user", user.id, game.id], game);
+  }
+
+  const res = await ao.commit();
+
   if (res.ok) {
     console.log("broadcasting game update", game.id, res.versionstamp);
     const bc1 = new BroadcastChannel(`game/${game.id}`);
     bc1.postMessage({ game, versionstamp: res!.versionstamp });
-    const bc2 = new BroadcastChannel(`games_by_user/${game.initiator.id}`);
+    // TODO: make me nb of players agnostic
+    const bc2 = new BroadcastChannel(
+      `games_by_user/${game.players[0].user.id}`
+    );
     bc2.postMessage({ game, versionstamp: res!.versionstamp });
-    const bc3 = new BroadcastChannel(`games_by_user/${game.opponent.id}`);
+    const bc3 = new BroadcastChannel(
+      `games_by_user/${game.players[1].user.id}`
+    );
     bc3.postMessage({ game, versionstamp: res!.versionstamp });
     setTimeout(() => {
       bc1.close();
@@ -88,9 +99,11 @@ export async function setGame(game: Game, versionstamp?: string) {
   return res.ok;
 }
 
-export async function listGamesByPlayer(userId: string): Promise<Game[]> {
-  const games: Game[] = [];
-  const iter = kv.list<Game>({ prefix: ["games_by_user", userId] });
+export async function listGamesByPlayer(
+  userId: string
+): Promise<SplendorGame[]> {
+  const games: SplendorGame[] = [];
+  const iter = kv.list<SplendorGame>({ prefix: ["games_by_user", userId] });
   for await (const { value } of iter) {
     games.push(value);
   }
@@ -98,19 +111,20 @@ export async function listGamesByPlayer(userId: string): Promise<Game[]> {
 }
 
 export async function getGame(id: string) {
-  const res = await kv.get<Game>(["games", id]);
+  const res = await kv.get<SplendorGame>(["games", id]);
+  // console.log(res.value);
   return res.value;
 }
 
 export async function getGameWithVersionstamp(id: string) {
-  const res = await kv.get<Game>(["games", id]);
+  const res = await kv.get<SplendorGame>(["games", id]);
   if (res.versionstamp === null) return null;
   return [res.value, res.versionstamp] as const;
 }
 
 export function subscribeGame(
   id: string,
-  cb: (game: Game) => void,
+  cb: (game: SplendorGame) => void
 ): () => void {
   const bc = new BroadcastChannel(`game/${id}`);
   let closed = false;
@@ -127,7 +141,7 @@ export function subscribeGame(
       "received game update",
       id,
       ev.data.versionstamp,
-      `(last: ${lastVersionstamp})`,
+      `(last: ${lastVersionstamp})`
     );
     if (lastVersionstamp >= ev.data.versionstamp) return;
     cb(ev.data.game);
@@ -140,7 +154,7 @@ export function subscribeGame(
 
 export function subscribeGamesByPlayer(
   userId: string,
-  cb: (list: Game[]) => void,
+  cb: (list: SplendorGame[]) => void
 ) {
   const bc = new BroadcastChannel(`games_by_user/${userId}`);
   let closed = false;
@@ -154,7 +168,7 @@ export function subscribeGamesByPlayer(
         "received games_by_user update",
         game.id,
         versionstamp,
-        `(last: ${lastVersionstamps.get(game.id)})`,
+        `(last: ${lastVersionstamps.get(game.id)})`
       );
       if ((lastVersionstamps.get(game.id) ?? "") >= versionstamp) return;
       lastVersionstamps.set(game.id, versionstamp);

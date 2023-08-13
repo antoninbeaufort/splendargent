@@ -17,23 +17,25 @@ export function Header(props: { user: User | null }) {
       </div>
 
       <div class="flex items-center justify-between">
-        {props.user ? (
-          <>
-            <p class="text-sm text-gray-600">
-              Logged in as <UserNameHorizontal user={props.user} />
-            </p>
-            <a class={linkClass} href="/auth/signout">
-              Log out
-            </a>
-          </>
-        ) : (
-          <>
-            <p class="text-sm text-gray-600">Anonymous user</p>
-            <a class={linkClass} href="/auth/signin">
-              Log in
-            </a>
-          </>
-        )}
+        {props.user
+          ? (
+            <>
+              <p class="text-sm text-gray-600">
+                Logged in as <UserNameHorizontal user={props.user} />
+              </p>
+              <a class={linkClass} href="/auth/signout">
+                Log out
+              </a>
+            </>
+          )
+          : (
+            <>
+              <p class="text-sm text-gray-600">Anonymous user</p>
+              <a class={linkClass} href="/auth/signin">
+                Log in
+              </a>
+            </>
+          )}
       </div>
     </>
   );

@@ -42,19 +42,19 @@ const symbolColorMap = new Map([
 ]);
 
 export const prepareTokens = (
-  numberOfPlayers: AllowedNumberOfPlayers,
+  numberOfPlayers: AllowedNumberOfPlayers
 ): Record<GemStone, number> => {
   const gemStones = Object.keys(GemStone) as GemStone[];
   const entries = gemStones.map(
     (key) =>
-      [key, numberOfTokensByPlayersMap[numberOfPlayers]] as [GemStone, number],
+      [key, numberOfTokensByPlayersMap[numberOfPlayers]] as [GemStone, number]
   );
 
   return Object.fromEntries(entries) as Record<GemStone, number>;
 };
 
 const isValidNumberOfPlayers = (
-  numberOfPlayers: number,
+  numberOfPlayers: number
 ): numberOfPlayers is AllowedNumberOfPlayers => {
   return [2, 3, 4].includes(numberOfPlayers);
 };
@@ -92,14 +92,17 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
   };
 };
 
-type Action = { type: "pick"; tokens: GemStone[] } | {
-  type: "reserve";
-  card: Card;
-} | { type: "buy"; card: Card };
+type Action =
+  | { type: "pick"; tokens: GemStone[] }
+  | {
+      type: "reserve";
+      card: Card;
+    }
+  | { type: "buy"; card: Card };
 
 const currentPlayerFrom = (game: SplendorGame): Player => {
-  const currentPlayer = game.players.find((player) =>
-    player.user.id === game.turn
+  const currentPlayer = game.players.find(
+    (player) => player.user.id === game.turn
   );
   if (!currentPlayer) {
     throw new Error("Unable to find current player");
@@ -121,40 +124,36 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
     }
     return acc;
   }, {} as Partial<Record<GemStone, number>>);
-  for (
-    const [gemStone, occurences] of Object.entries(gemStoneOccurences) as [
-      GemStone,
-      number,
-    ][]
-  ) {
+  for (const [gemStone, occurences] of Object.entries(gemStoneOccurences) as [
+    GemStone,
+    number
+  ][]) {
     if (game.tokens[gemStone] < occurences) {
       throw new Error(`There are no enough tokens of the gemstone ${gemStone}`);
     }
   }
 
   const isPickingOneTokenOfDifferentGemStones = Object.entries(
-    gemStoneOccurences,
-  ).every((
-    [_gemStone, occurences],
-  ) => occurences === 1);
+    gemStoneOccurences
+  ).every(([_gemStone, occurences]) => occurences === 1);
   if (isPickingOneTokenOfDifferentGemStones) {
     return;
   }
 
-  const isManyGemStoneOfSameType = Object.entries(gemStoneOccurences).some((
-    [_gemStone, occurences],
-  ) => occurences === 2);
+  const isManyGemStoneOfSameType = Object.entries(gemStoneOccurences).some(
+    ([_gemStone, occurences]) => occurences === 2
+  );
   if (isManyGemStoneOfSameType) {
     const numberOfDifferentGemStones = Object.keys(gemStoneOccurences).length;
     if (numberOfDifferentGemStones > 1) {
       throw new Error(
-        "you can't pick multiple gemstone while you're picking two tokens of the same gemstones",
+        "you can't pick multiple gemstone while you're picking two tokens of the same gemstones"
       );
     }
 
     if (game.tokens[tokens[0]] < 4) {
       throw new Error(
-        "there are no enough token of this gemstone to pick 2 of them",
+        "there are no enough token of this gemstone to pick 2 of them"
       );
     }
 
@@ -162,7 +161,7 @@ const assertPicking = (game: SplendorGame, tokens: GemStone[]) => {
   }
 
   throw new Error(
-    "impossible state, you should pick either 1 token of max 3 different gemstones or 2 tokens of a single gemstone if there are enough gemstones (4)",
+    "impossible state, you should pick either 1 token of max 3 different gemstones or 2 tokens of a single gemstone if there are enough gemstones (4)"
   );
 };
 
@@ -204,29 +203,27 @@ const assertCardVisible = (game: SplendorGame, card: Card) => {
 
 const playerGemStoneCardOwnedFrom = (
   player: Player,
-  gemStone: GemStone,
+  gemStone: GemStone
 ): number => {
   return player.cards.filter((playerCard) => playerCard.symbol === gemStone)
     .length;
 };
 
 const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
-  for (
-    const [gemStone, quantity] of Object.entries(card.price) as [
-      GemStone,
-      number,
-    ][]
-  ) {
+  for (const [gemStone, quantity] of Object.entries(card.price) as [
+    GemStone,
+    number
+  ][]) {
     const playerGemStoneTokenQuantity = player.tokens[gemStone] ?? 0;
     const playerGemStoneCardQuantity = playerGemStoneCardOwnedFrom(
       player,
-      card.symbol,
+      card.symbol
     );
-    const playerGemStoneTotalQuantity = playerGemStoneTokenQuantity +
-      playerGemStoneCardQuantity;
+    const playerGemStoneTotalQuantity =
+      playerGemStoneTokenQuantity + playerGemStoneCardQuantity;
     if (playerGemStoneTotalQuantity < quantity) {
       throw new Error(
-        `player has not enough ${gemStone}, he has ${playerGemStoneTotalQuantity} while it need ${quantity}`,
+        `player has not enough ${gemStone}, he has ${playerGemStoneTotalQuantity} while it need ${quantity}`
       );
     }
   }
@@ -235,32 +232,30 @@ const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
 const exchangeTokensForBuyCard = (
   game: SplendorGame,
   player: Player,
-  card: Card,
+  card: Card
 ) => {
-  for (
-    const [gemStone, quantity] of Object.entries(card.price) as [
-      GemStone,
-      number,
-    ][]
-  ) {
+  for (const [gemStone, quantity] of Object.entries(card.price) as [
+    GemStone,
+    number
+  ][]) {
     const playerGemStoneCardOwned = playerGemStoneCardOwnedFrom(
       player,
-      gemStone,
+      gemStone
     );
-    const quantityMinusPlayerGemStoneCardOwned = quantity -
-      playerGemStoneCardOwned;
+    const quantityMinusPlayerGemStoneCardOwned =
+      quantity - playerGemStoneCardOwned;
     player.tokens[gemStone]! -= quantityMinusPlayerGemStoneCardOwned;
     game.tokens[gemStone]! += quantityMinusPlayerGemStoneCardOwned;
   }
 };
 
 const moveBoughtCard = (game: SplendorGame, player: Player, card: Card) => {
-  const visibleCardIndex = game.visibleCards.get(card.level)!.findIndex(
-    (visibleCard) => equal(visibleCard, card),
-  );
+  const visibleCardIndex = game.visibleCards
+    .get(card.level)!
+    .findIndex((visibleCard) => equal(visibleCard, card));
   const replacementCard = game.decks.get(card.level)!.shift();
-  game.visibleCards.get(card.level)![visibleCardIndex] = replacementCard ??
-    null;
+  game.visibleCards.get(card.level)![visibleCardIndex] =
+    replacementCard ?? null;
   player.cards.push(card);
 };
 

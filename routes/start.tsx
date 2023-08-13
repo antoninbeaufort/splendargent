@@ -1,6 +1,7 @@
 import { Handlers } from "$fresh/server.ts";
 import { getUserByLogin, getUserBySession, setGame } from "🛠️/db.ts";
 import { Game, State } from "🛠️/types.ts";
+import { initializeGameFrom } from "🛠️/game.ts";
 
 export const handler: Handlers<undefined, State> = {
   async POST(req, ctx) {
@@ -31,7 +32,7 @@ export const handler: Handlers<undefined, State> = {
     if (!initiatorUser) return new Response("Not logged in", { status: 401 });
     if (!opponentUser) {
       return new Response(
-        "Opponent user has not signed up yet. Ask them to sign in to TicTacToe to play against you.",
+        "Opponent user has not signed up yet. Ask them to sign in to Splendargent to play against you.",
         { status: 400 },
       );
     }
@@ -39,20 +40,13 @@ export const handler: Handlers<undefined, State> = {
       return new Response("Cannot play against yourself", { status: 400 });
     }
 
-    const game: Game = {
-      id: Math.random().toString(36).slice(2),
-      initiator: initiatorUser,
-      opponent: opponentUser,
-      grid: [null, null, null, null, null, null, null, null, null],
-      startedAt: new Date(),
-      lastMoveAt: new Date(),
-    };
+    const game = initializeGameFrom([initiatorUser, opponentUser]);
     await setGame(game);
 
     return new Response(null, {
       status: 302,
       headers: {
-        "Location": `/game/${game.id}`,
+        Location: `/game/${game.id}`,
       },
     });
   },

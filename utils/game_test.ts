@@ -114,11 +114,7 @@ describe("pick when it's your turn", () => {
     const pick = () =>
       action(game, {
         type: "pick",
-        tokens: [
-          GemStone.DIAMOND,
-          GemStone.DIAMOND,
-          GemStone.DIAMOND,
-        ],
+        tokens: [GemStone.DIAMOND, GemStone.DIAMOND, GemStone.DIAMOND],
       });
 
     // Then
@@ -130,11 +126,7 @@ describe("pick when it's your turn", () => {
     const pick = () =>
       action(game, {
         type: "pick",
-        tokens: [
-          GemStone.DIAMOND,
-          GemStone.DIAMOND,
-          GemStone.EMERALD,
-        ],
+        tokens: [GemStone.DIAMOND, GemStone.DIAMOND, GemStone.EMERALD],
       });
 
     // Then
@@ -150,10 +142,7 @@ describe("pick when it's your turn", () => {
     const pick = () =>
       action(gameCopy, {
         type: "pick",
-        tokens: [
-          GemStone.DIAMOND,
-          GemStone.DIAMOND,
-        ],
+        tokens: [GemStone.DIAMOND, GemStone.DIAMOND],
       });
 
     // Then
@@ -169,11 +158,7 @@ describe("pick when it's your turn", () => {
     const pick = () =>
       action(gameCopy, {
         type: "pick",
-        tokens: [
-          GemStone.DIAMOND,
-          GemStone.EMERALD,
-          GemStone.RUBY,
-        ],
+        tokens: [GemStone.DIAMOND, GemStone.EMERALD, GemStone.RUBY],
       });
 
     // Then
@@ -275,9 +260,9 @@ describe("buy when it's your turn", () => {
   it("should cost price minus cards gemstones already owned", () => {
     // Given
     const gameCopy = structuredClone(game);
-    const diamondCard = cards.findLast((card) =>
-      card.symbol === GemStone.DIAMOND
-    );
+    const diamondCard = cards.findLast(
+      (card) => card.symbol === GemStone.DIAMOND,
+    )!;
     gameCopy.players[0].cards = [diamondCard];
 
     // When

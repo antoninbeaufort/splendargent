@@ -45,3 +45,5 @@ You can then start the local development server:
 ```
 deno task start
 ```
+
+JS Map cannot pass from handler to JSX component because of JSON.stringify used

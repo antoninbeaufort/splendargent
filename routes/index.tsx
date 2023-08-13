@@ -1,7 +1,7 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 
-import { Game, State, User } from "🛠️/types.ts";
+import { Game, SplendorGame, State, User } from "🛠️/types.ts";
 import {
   getUserBySession,
   listGamesByPlayer,
@@ -9,17 +9,14 @@ import {
 } from "🛠️/db.ts";
 
 import { Button, ButtonLink } from "🧱/Button.tsx";
-import { UserNameVertical } from "🧱/User.tsx";
 import { Header } from "🧱/Header.tsx";
-
-import GamesList from "🏝️/GamesList.tsx";
 
 type Data = SignedInData | null;
 
 interface SignedInData {
   user: User;
   users: User[];
-  games: Game[];
+  games: SplendorGame[];
 }
 
 export async function handler(req: Request, ctx: HandlerContext<Data, State>) {
@@ -51,12 +48,10 @@ export default function Home(props: PageProps<Data>) {
 }
 
 function SignedIn(props: SignedInData) {
-  const otherUsers = props.users.filter((u) => u.id != props.user.id);
   return (
     <>
-      <GamesList games={props.games} user={props.user} />
       <p class="my-6">
-        Challenge someone to a game of Tic-Tac-Toe! Just enter their GitHub
+        Challenge someone to a game of Splendargent! Just enter their GitHub
         username in the box below and click "Start Game".
       </p>
       <form action="/start" method="POST">
