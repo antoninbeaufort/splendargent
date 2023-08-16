@@ -2,7 +2,7 @@ import shuffle from "https://deno.land/x/shuffle@v1.0.1/mod.ts";
 import { GemStone } from "🛠️/types.ts";
 import type { Noble } from "🛠️/types.ts";
 
-const nobles: Noble[] = [
+export const nobles: Noble[] = [
   {
     points: 3,
     requirements: {

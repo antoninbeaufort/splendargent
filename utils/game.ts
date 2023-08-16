@@ -8,6 +8,7 @@ import {
   AllowedNumberOfPlayers,
   Card,
   GemStone,
+  Noble,
   Player,
   SplendorGame,
   User,
@@ -75,7 +76,13 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
   const shuffledUsers = shuffle(users);
   const players = shuffledUsers.map((user) => ({
     user,
-    tokens: {},
+    tokens: {
+      [GemStone.DIAMOND]: 0,
+      [GemStone.SAPPHIRE]: 0,
+      [GemStone.EMERALD]: 0,
+      [GemStone.RUBY]: 0,
+      [GemStone.ONYX]: 0,
+    },
     cards: [],
     nobles: [],
   }));
@@ -246,6 +253,9 @@ const exchangeTokensForBuyCard = (
     );
     const quantityMinusPlayerGemStoneCardOwned =
       quantity - playerGemStoneCardOwned;
+    if (quantityMinusPlayerGemStoneCardOwned < 1) {
+      continue;
+    }
     player.tokens[gemStone]! -= quantityMinusPlayerGemStoneCardOwned;
     game.tokens[gemStone]! += quantityMinusPlayerGemStoneCardOwned;
   }
@@ -286,18 +296,51 @@ const getNextPlayer = (game: SplendorGame): string => {
   return game.players[(currentPlayerIndex + 1) % game.players.length].user.id;
 };
 
+const areRequirementsMet = (noble: Noble, player: Player): boolean => {
+  for (const [gemStone, neededCount] of Object.entries(noble.requirements)) {
+    const playerCountOfGemstone = player.cards.filter(
+      (card) => card.symbol === gemStone
+    ).length;
+    if (playerCountOfGemstone < neededCount) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const distributeNoble = (game: SplendorGame): SplendorGame => {
+  const currentPlayer = currentPlayerFrom(game);
+
+  const nobleIndexThatCanBeGrabbedByCurrentPlayer = game.nobles.findIndex(
+    (noble) => areRequirementsMet(noble, currentPlayer)
+  );
+  if (nobleIndexThatCanBeGrabbedByCurrentPlayer === -1) {
+    return game;
+  }
+  const [removedNoble] = game.nobles.splice(
+    nobleIndexThatCanBeGrabbedByCurrentPlayer,
+    1
+  );
+  currentPlayer.nobles.push(removedNoble);
+
+  return game;
+};
+
 export const action = (game: SplendorGame, action: Action): SplendorGame => {
   const gameCopy = structuredClone(game);
 
-  const updatedGame = match(action)
+  match(action)
     .with({ type: "pick" }, ({ tokens }) => pick(gameCopy, tokens))
     .with({ type: "buy" }, ({ card }) => buy(gameCopy, card))
     .with({ type: "reserve" }, ({ card }) => reserve(gameCopy, card))
     .exhaustive();
 
-  updatedGame.turn = getNextPlayer(updatedGame);
+  distributeNoble(gameCopy);
 
-  return updatedGame;
+  gameCopy.turn = getNextPlayer(gameCopy);
+
+  return gameCopy;
 };
 
 export interface GameStateInProgress {

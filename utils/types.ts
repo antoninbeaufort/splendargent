@@ -35,7 +35,7 @@ export enum GemStone {
   // GOLD = "GOLD",
 }
 
-type Price = Partial<Record<GemStone, number>>;
+type Price = Record<GemStone, number>;
 
 export type Card = Readonly<{
   symbol: GemStone;

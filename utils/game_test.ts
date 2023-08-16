@@ -10,6 +10,7 @@ import {
 import { action, initializeGameFrom, prepareTokens } from "🛠️/game.ts";
 import { GemStone, SplendorGame } from "🛠️/types.ts";
 import { cards } from "./cards.ts";
+import { nobles } from "🛠️/nobles.ts";
 
 const testCases = [
   { numberOfPlayers: 2, expectedNumberOfTokens: 4 },
@@ -295,5 +296,65 @@ describe("buy when it's your turn", () => {
     assertEquals(updatedGame.tokens[GemStone.RUBY], 7);
     assertEquals(updatedGame.tokens[GemStone.ONYX], 6);
     assertEquals(updatedGame.visibleCards[1][0], cards[4]);
+  });
+
+  it("should not cost a negative amount of token if user has more tokens owned than needed", () => {
+    // Given
+    const gameCopy = structuredClone(game);
+    const diamondCards = cards
+      .filter((card) => card.symbol === GemStone.DIAMOND)
+      .slice(0, 8);
+    gameCopy.players[0].cards = [...diamondCards];
+    const wantedCard = {
+      symbol: GemStone.SAPPHIRE,
+      points: 4,
+      level: 3,
+      price: {
+        [GemStone.DIAMOND]: 7,
+        [GemStone.SAPPHIRE]: 0,
+        [GemStone.EMERALD]: 0,
+        [GemStone.RUBY]: 0,
+        [GemStone.ONYX]: 0,
+      },
+    } as const;
+    gameCopy.visibleCards[3][0] = wantedCard;
+
+    // When
+    const updatedGame = action(gameCopy, {
+      type: "buy",
+      card: wantedCard,
+    });
+
+    // Then
+    assertEquals(updatedGame.players[0].cards, [...diamondCards, wantedCard]);
+    assertEquals(updatedGame.players[0].tokens[GemStone.DIAMOND], 1);
+    assertEquals(updatedGame.tokens[GemStone.DIAMOND], 6);
+  });
+
+  it("should distribute noble when requirements are met", () => {
+    // Given
+    const gameCopy = structuredClone(game);
+    const emeraldCards = cards
+      .filter((card) => card.symbol === GemStone.EMERALD)
+      .slice(0, 4);
+    const rubyCards = cards
+      .filter((card) => card.symbol === GemStone.RUBY)
+      .slice(-3);
+
+    gameCopy.players[0].cards = [...emeraldCards, ...rubyCards];
+
+    // When
+    const lastRubyMissing = cards.find(
+      (card) => card.symbol === GemStone.RUBY
+    )!;
+    gameCopy.visibleCards[1][0] = lastRubyMissing;
+    const updatedGame = action(gameCopy, {
+      type: "buy",
+      card: gameCopy.visibleCards[1][0]!,
+    });
+
+    // Then
+    assertEquals(updatedGame.players[0].cards.at(-1), lastRubyMissing);
+    assertEquals(updatedGame.players[0].nobles, [nobles[0]]);
   });
 });

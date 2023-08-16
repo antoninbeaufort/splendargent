@@ -115,22 +115,28 @@ function PlayerTokens(props: { tokens: Partial<Record<GemStone, number>> }) {
   return (
     <div class="flex mt-2 gap-x-1">
       {tokensEntries.map(([gemStone, count]) => (
-        <Price gemStone={gemStone} count={count} />
+        <Price gemStone={gemStone} count={count} hiddenOnNoCount />
       ))}
     </div>
   );
 }
 
 function PlayerCardsPoints(props: { cards: Card[] }) {
-  const gemStoneOccurences = props.cards.reduce((acc, curr) => {
-    const objectKey = acc[curr.symbol];
-    if (objectKey) {
+  const gemStoneOccurences = props.cards.reduce(
+    (acc, curr) => {
+      const objectKey = acc[curr.symbol];
       acc[curr.symbol] = objectKey + 1;
-    } else {
-      acc[curr.symbol] = 1;
-    }
-    return acc;
-  }, {} as Partial<Record<GemStone, number>>);
+
+      return acc;
+    },
+    {
+      [GemStone.DIAMOND]: 0,
+      [GemStone.SAPPHIRE]: 0,
+      [GemStone.EMERALD]: 0,
+      [GemStone.RUBY]: 0,
+      [GemStone.ONYX]: 0,
+    } as Record<GemStone, number>
+  );
   const tokensEntries = Object.entries(gemStoneOccurences) as [
     GemStone,
     number
@@ -139,7 +145,12 @@ function PlayerCardsPoints(props: { cards: Card[] }) {
   return (
     <div class="flex mt-2 gap-x-1">
       {tokensEntries.map(([gemStone, count]) => (
-        <Price gemStone={gemStone} count={count} rounded="rounded" />
+        <Price
+          gemStone={gemStone}
+          count={count}
+          rounded="rounded"
+          hiddenOnNoCount
+        />
       ))}
     </div>
   );
@@ -197,13 +208,18 @@ function Card(props: { card: Card | null; gameId: string }) {
 
   return (
     <div
-      class="bg-gray-200 w-32 h-48 rounded-lg flex flex-col p-1"
+      class={`relative w-32 h-48 rounded-lg flex flex-col p-2 bg-gray-200`}
       onClick={buy}
     >
-      <div>
-        {props.card.points} - {props.card.symbol}
+      <div
+        class={`absolute bg-[${symbolColorMap.get(
+          props.card.symbol
+        )}] inset-x-0 top-0 h-full opacity-40 rounded-lg`}
+      ></div>
+      <div class="z-10">
+        <span class="text-3xl font-extrabold">{props.card.points}</span>
       </div>
-      <div class="flex flex-col justify-end flex-grow gap-y-0.5">
+      <div class="z-10 flex flex-col justify-end flex-grow gap-y-0.5">
         {(Object.entries(props.card.price) as [GemStone, number][]).map(
           ([gemStone, count]) => (
             <Price gemStone={gemStone} count={count} />
@@ -234,7 +250,7 @@ function Price(props: {
         sizeOrDefault / 3
       } ${roundedOrDefault} font-bold ${
         props.gemStone === GemStone.DIAMOND ? "" : "text-white"
-      } ${!props.count ? "invisible" : ""} ${
+      } ${!props.count ? "opacity-30" : ""} ${
         !props.isPlayerTurn ? "cursor-default" : ""
       }`}
       style={{ backgroundColor: symbolColorMap.get(props.gemStone) }}
@@ -259,7 +275,7 @@ function Nobles(props: { nobles: Noble[] }) {
 function NobleCard(props: { noble: Noble }) {
   return (
     <div class={`bg-gray-200 rounded-lg w-40 h-40 p-2 flex flex-col`}>
-      <span class="ml-2 text-3xl font-extrabold ">{props.noble.points}</span>
+      <span class="ml-2 text-3xl font-extrabold">{props.noble.points}</span>
       <div class="flex flex-col flex-grow gap-y-0.5 justify-end">
         {(Object.entries(props.noble.requirements) as [GemStone, number][]).map(
           ([gemStone, count]) => (
