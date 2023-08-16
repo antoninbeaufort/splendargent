@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { getUserByLogin, getUserBySession, setGame } from "🛠️/db.ts";
-import { Game, State } from "🛠️/types.ts";
+import { State } from "🛠️/types.ts";
 import { initializeGameFrom } from "🛠️/game.ts";
 
 export const handler: Handlers<undefined, State> = {
@@ -33,7 +33,7 @@ export const handler: Handlers<undefined, State> = {
     if (!opponentUser) {
       return new Response(
         "Opponent user has not signed up yet. Ask them to sign in to Splendargent to play against you.",
-        { status: 400 },
+        { status: 400 }
       );
     }
     if (initiatorUser.id === opponentUser.id) {

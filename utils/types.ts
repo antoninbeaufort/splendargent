@@ -68,12 +68,3 @@ export type SplendorGame = {
   decks: Record<Card["level"], Card[]>; // TODO: make this private
   turn: Player["user"]["id"];
 };
-
-export interface Game {
-  id: string;
-  initiator: User;
-  opponent: User;
-  grid: GameGrid;
-  startedAt: Date;
-  lastMoveAt: Date;
-}

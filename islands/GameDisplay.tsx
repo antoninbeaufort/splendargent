@@ -1,16 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { tw } from "twind";
 
-import {
-  Card,
-  Game,
-  GemStone,
-  Noble,
-  Player,
-  SplendorGame,
-  User,
-} from "🛠️/types.ts";
-import { Action, GameState, assertPicking, symbolColorMap } from "🛠️/game.ts";
+import { Card, GemStone, Noble, Player, SplendorGame, User } from "🛠️/types.ts";
+import { Action, assertPicking, symbolColorMap } from "🛠️/game.ts";
 import { useDataSubscription } from "🛠️/hooks.ts";
 
 import { UserNameHorizontal, UserNameVertical } from "🧱/User.tsx";
@@ -229,6 +221,7 @@ function Price(props: {
   rounded?: string;
   onClick?: any;
   hiddenOnNoCount?: boolean;
+  isPlayerTurn?: boolean;
 }) {
   const sizeOrDefault = props.size ?? 6;
   const roundedOrDefault = props.rounded ?? "rounded-full";
@@ -236,18 +229,20 @@ function Price(props: {
   if (!props.count && !props.hiddenOnNoCount) return null;
 
   return (
-    <div
-      class={`text-center w-${sizeOrDefault} h-${sizeOrDefault} px-${
+    <button
+      class={`block text-center w-${sizeOrDefault} h-${sizeOrDefault} px-${
         sizeOrDefault / 3
-      } pt-${sizeOrDefault / 2 - 3} ${roundedOrDefault} font-bold ${
+      } ${roundedOrDefault} font-bold ${
         props.gemStone === GemStone.DIAMOND ? "" : "text-white"
-      } ${!props.count ? "invisible" : ""}`}
+      } ${!props.count ? "invisible" : ""} ${
+        !props.isPlayerTurn ? "cursor-default" : ""
+      }`}
       style={{ backgroundColor: symbolColorMap.get(props.gemStone) }}
-      disabled={!props.count}
+      disabled={!props.count || !props.isPlayerTurn}
       onClick={props.onClick}
     >
       {props.count}
-    </div>
+    </button>
   );
 }
 
@@ -391,59 +386,30 @@ function Tokens(props: {
                 size={12}
                 onClick={() => selectToken(gemStone)}
                 hiddenOnNoCount
+                isPlayerTurn={props.isPlayerTurn}
               />
-              <div class="text-center" onClick={() => removeToken(gemStone)}>
-                {selectedTokens[gemStone]}
+              <div class="mt-2">
+                <button
+                  class={`block text-center mx-auto bg-gray-200 rounded-full w-8 h-8 ${
+                    !props.isPlayerTurn ? "cursor-default" : ""
+                  } ${!selectedTokens[gemStone] ? "invisible" : ""}`}
+                  disabled={!props.isPlayerTurn}
+                  onClick={() => removeToken(gemStone)}
+                >
+                  {selectedTokens[gemStone]}
+                </button>
               </div>
             </div>
           )
         )}
       </div>
       {props.isPlayerTurn ? (
-        <div class="flex justify-center">
+        <div class="flex justify-center mt-2">
           <button class="bg-gray-100 p-2 rounded-lg" onClick={pick}>
             Pick
           </button>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function GameCell(props: {
-  index: number;
-  game: Game;
-  state: GameState;
-  user: User | null;
-}) {
-  const { game, index, user, state } = props;
-  const onClick = async () => {
-    if (
-      state.state !== "in_progress" ||
-      state.turn !== user?.id ||
-      game.grid[index] !== null
-    ) {
-      return;
-    }
-    const res = await fetch(`/api/place?id=${game.id}&index=${index}`, {
-      method: "POST",
-    });
-    if (res.status !== 200) {
-      alert("Something went wrong");
-    }
-  };
-
-  const value = game.grid[index];
-  const display =
-    value === null ? "" : value === game.initiator.id ? "❌" : "⭕";
-
-  return (
-    <div
-      class="w-full border-[1px] box-border text-8xl flex items-center justify-center"
-      style="aspect-ratio: 1/1"
-      onClick={onClick}
-    >
-      {display}
     </div>
   );
 }

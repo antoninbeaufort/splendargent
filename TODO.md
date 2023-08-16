@@ -1,0 +1,5 @@
+- [ ] Allow more than 2 players to play
+- [ ] Distribute nobles
+- [ ] Add end condition
+- [ ] Make the UI good
+- [ ] Add the reserve functionnality
