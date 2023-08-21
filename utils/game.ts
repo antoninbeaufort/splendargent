@@ -327,6 +327,28 @@ const distributeNoble = (game: SplendorGame): SplendorGame => {
   return game;
 };
 
+export const getPlayerPoints = (player: Player): number => {
+  const pointsFromCards = player.cards.reduce((acc, curr) => {
+    return acc + curr.points;
+  }, 0);
+  const pointsFromNobles = player.nobles.reduce((acc, curr) => {
+    return acc + curr.points;
+  }, 0);
+
+  return pointsFromCards + pointsFromNobles;
+};
+
+export type Leaderboard = { player: string; score: number }[];
+
+const generateLeaderboard = (game: SplendorGame): Leaderboard => {
+  return game.players
+    .map((player) => ({
+      player: player.user.id,
+      score: getPlayerPoints(player),
+    }))
+    .sort((a, b) => b.score - a.score);
+};
+
 export const action = (game: SplendorGame, action: Action): SplendorGame => {
   const gameCopy = structuredClone(game);
 
@@ -345,16 +367,32 @@ export const action = (game: SplendorGame, action: Action): SplendorGame => {
 
 export interface GameStateInProgress {
   state: "in_progress";
-  turn: string;
 }
 
-export interface GameStateTie {
-  state: "tie";
+export interface GameStateEnded {
+  state: "ended";
+  leaderboard: Leaderboard;
 }
 
-export interface GameStateWin {
-  state: "win";
-  winner: string;
-}
+export type GameState = GameStateInProgress | GameStateEnded;
 
-export type GameState = GameStateInProgress | GameStateTie | GameStateWin;
+export const analyzeGame = (game: SplendorGame): GameState => {
+  const isFirstPlayerTurn = game.turn === game.players[0].user.id;
+  if (!isFirstPlayerTurn) {
+    return {
+      state: "in_progress",
+    };
+  }
+  const leaderboard = generateLeaderboard(game);
+  const somePlayerHaveEnoughPointsToEndGame = leaderboard[0].score >= 15;
+  if (!somePlayerHaveEnoughPointsToEndGame) {
+    return {
+      state: "in_progress",
+    };
+  }
+
+  return {
+    state: "ended",
+    leaderboard,
+  };
+};

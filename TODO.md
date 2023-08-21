@@ -1,7 +1,8 @@
 - [ ] Assert frontside if a user can pick
 - [ ] Allow more than 2 players to play
-- [ ] Distribute nobles
-- [ ] Add end condition
+- [x] Distribute nobles
+- [x] Add end condition
+- [x] Handle equalities
 - [ ] Make the UI good
 - [ ] Add the reserve functionnality
 - [ ] Max 10 tokens in hand

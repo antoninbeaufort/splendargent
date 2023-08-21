@@ -2,11 +2,19 @@ import { useEffect, useState } from "preact/hooks";
 import { tw } from "twind";
 
 import { Card, GemStone, Noble, Player, SplendorGame, User } from "🛠️/types.ts";
-import { Action, assertPicking, symbolColorMap } from "🛠️/game.ts";
+import {
+  Action,
+  Leaderboard,
+  analyzeGame,
+  assertPicking,
+  getPlayerPoints,
+  symbolColorMap,
+} from "🛠️/game.ts";
 import { useDataSubscription } from "🛠️/hooks.ts";
 
 import { UserNameHorizontal, UserNameVertical } from "🧱/User.tsx";
 import { rainbowBackground } from "🧱/animations.ts";
+import { match } from "npm:ts-pattern";
 
 export default function GameDisplay(props: {
   game: SplendorGame;
@@ -26,33 +34,23 @@ export default function GameDisplay(props: {
     return () => eventSource.close();
   }, [props.game.id]);
 
-  // here was the game analysis
-  const state = "in_progress";
-
   const isPlayerTurn = game.turn === user?.id;
-  const getPlayerPoints = (player: Player): number => {
-    const pointsFromCards = player.cards.reduce((acc, curr) => {
-      return acc + curr.points;
-    }, 0);
-    const pointsFromNobles = player.nobles.reduce((acc, curr) => {
-      return acc + curr.points;
-    }, 0);
 
-    return pointsFromCards + pointsFromNobles;
-  };
+  // here was the game analysis
+  const analyze = analyzeGame(game);
 
-  return (
-    <>
-      <div
-        class={tw`border rounded-xl my-6 text-xl sm:text-2xl text-center p-4 ${
-          state === "in_progress" && game.turn === user?.id && rainbowBackground
-        }`}
-      >
-        {/* {state === "win" && (
-          <>{state.winner === game.initiator.id ? "❌" : "⭕"} wins!</>
-        )} */}
-        {state === "in_progress" &&
-          (isPlayerTurn ? (
+  return match(analyze)
+    .with({ state: "ended" }, ({ leaderboard }) => (
+      <LeaderboardComponent leaderboard={leaderboard} players={game.players} />
+    ))
+    .with({ state: "in_progress" }, () => (
+      <>
+        <div
+          class={tw`border rounded-xl my-6 text-xl sm:text-2xl text-center p-4 ${
+            game.turn === user?.id && rainbowBackground
+          }`}
+        >
+          {isPlayerTurn ? (
             <>Your turn!</>
           ) : (
             <>
@@ -65,47 +63,140 @@ export default function GameDisplay(props: {
               />
               ...
             </>
-          ))}
-        {/* {state === "tie" && <>Tie!</>} */}
-      </div>
-
-      <div class="flex gap-x-4">
-        <div class="max-w-md mx-auto flex flex-col gap-y-4">
-          <Nobles nobles={game.nobles} />
-          <VisibleCards visibleCards={game.visibleCards} gameId={game.id} />
-          <Tokens
-            tokens={game.tokens}
-            gameId={game.id}
-            isPlayerTurn={isPlayerTurn}
-          />
+          )}
         </div>
-        <div class="w-full border rounded-xl overflow-hidden">
-          {game.players.map((player) => (
-            <div class="border-b p-4">
-              <div class={`flex justify-between items-center gap-4`}>
-                <img
-                  class="w-16 h-16 rounded-full"
-                  src={player.user.avatarUrl}
-                  alt={player.user.name}
-                />
-                <UserNameVertical user={player.user} class="w-full" />
-              </div>
-              <div class="flex">
-                <div>
-                  <PlayerTokens tokens={player.tokens} />
-                  <PlayerCardsPoints cards={player.cards} />
+
+        <div class="flex gap-x-4">
+          <div class="max-w-md mx-auto flex flex-col gap-y-4">
+            <Nobles nobles={game.nobles} />
+            <VisibleCards visibleCards={game.visibleCards} gameId={game.id} />
+            <Tokens
+              tokens={game.tokens}
+              gameId={game.id}
+              isPlayerTurn={isPlayerTurn}
+            />
+          </div>
+          <div class="w-full border rounded-xl overflow-hidden">
+            {game.players.map((player) => (
+              <div class="border-b p-4">
+                <div class={`flex justify-between items-center gap-4`}>
+                  <img
+                    class="w-16 h-16 rounded-full"
+                    src={player.user.avatarUrl}
+                    alt={player.user.name}
+                  />
+                  <UserNameVertical user={player.user} class="w-full" />
                 </div>
-                <div class="flex justify-end text-center flex-grow mr-4">
-                  <div class="flex items-center">
-                    <p class="text-3xl">{getPlayerPoints(player)}</p>
+                <div class="flex">
+                  <div>
+                    <PlayerTokens tokens={player.tokens} />
+                    <PlayerCardsPoints cards={player.cards} />
+                  </div>
+                  <div class="flex justify-end text-center flex-grow mr-4">
+                    <div class="flex items-center">
+                      <p class="text-3xl">{getPlayerPoints(player)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </>
+    ))
+    .exhaustive();
+}
+
+type LeaderboardPopulatedEntry = {
+  player: Player;
+  score: number;
+  position: number;
+};
+
+function LeaderboardComponent(props: {
+  leaderboard: Leaderboard;
+  players: Player[];
+}) {
+  const leaderboardPopulatedEntryFrom = (
+    currentLeaderboardEntry: Leaderboard[number],
+    players: Player[]
+  ): LeaderboardPopulatedEntry => {
+    const matchingPlayer = players.find(
+      (player) => player.user.id === currentLeaderboardEntry.player
+    );
+    if (!matchingPlayer) {
+      throw new Error(
+        "unable to find matching player for this leaderboard entry"
+      );
+    }
+
+    const position =
+      props.leaderboard.findIndex(
+        (leaderboardEntry) =>
+          leaderboardEntry.score === currentLeaderboardEntry.score
+      ) + 1;
+    return {
+      player: matchingPlayer,
+      score: currentLeaderboardEntry.score,
+      position,
+    };
+  };
+
+  return (
+    <div class="mt-2">
+      <ul class="flex flex-col gap-y-2">
+        {props.leaderboard.map((leaderboardEntry) => (
+          <LeaderboardEntry
+            leaderboardPopulatedEntry={leaderboardPopulatedEntryFrom(
+              leaderboardEntry,
+              props.players
+            )}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LeaderboardEntry(props: {
+  leaderboardPopulatedEntry: LeaderboardPopulatedEntry;
+}) {
+  return (
+    <div class="border-b p-4 flex">
+      <div class="w-12 flex">
+        <p class="text-3xl">{props.leaderboardPopulatedEntry.position}</p>
+      </div>
+      <div>
+        <div class={`flex justify-between items-center gap-4`}>
+          <img
+            class="w-16 h-16 rounded-full"
+            src={props.leaderboardPopulatedEntry.player.user.avatarUrl}
+            alt={props.leaderboardPopulatedEntry.player.user.name}
+          />
+          <UserNameVertical
+            user={props.leaderboardPopulatedEntry.player.user}
+            class="w-full"
+          />
+        </div>
+        <div class="flex">
+          <div>
+            <PlayerTokens
+              tokens={props.leaderboardPopulatedEntry.player.tokens}
+            />
+            <PlayerCardsPoints
+              cards={props.leaderboardPopulatedEntry.player.cards}
+            />
+          </div>
+          <div class="flex justify-end text-center flex-grow mr-4">
+            <div class="flex items-center">
+              <p class="text-3xl">
+                {getPlayerPoints(props.leaderboardPopulatedEntry.player)}
+              </p>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
