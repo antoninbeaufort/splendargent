@@ -2,7 +2,7 @@
   "tasks": {
     "start": "deno run -A --unstable --watch=static/,routes/ dev.ts",
     "test": "deno test --watch --import-map=import_map.test.json",
-    "build": "deno run -A dev.ts build",
+    "build": "deno run -A --unstable dev.ts build",
     "preview": "deno run -A main.ts"
   },
   "compilerOptions": {
@@ -25,18 +25,11 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "fresh",
-        "recommended"
-      ]
+      "tags": ["fresh", "recommended"]
     },
-    "exclude": [
-      "_fresh"
-    ]
+    "exclude": ["_fresh"]
   },
   "fmt": {
-    "exclude": [
-      "_fresh"
-    ]
+    "exclude": ["_fresh"]
   }
 }
