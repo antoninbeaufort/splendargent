@@ -1,12 +1,8 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 
-import { Game, SplendorGame, State, User } from "🛠️/types.ts";
-import {
-  getUserBySession,
-  listGamesByPlayer,
-  listRecentlySignedInUsers,
-} from "🛠️/db.ts";
+import { State, User } from "🛠️/types.ts";
+import { getUserBySession } from "🛠️/db.ts";
 
 import { Button, ButtonLink } from "🧱/Button.tsx";
 import { Header } from "🧱/Header.tsx";
@@ -15,22 +11,15 @@ type Data = SignedInData | null;
 
 interface SignedInData {
   user: User;
-  users: User[];
-  games: SplendorGame[];
 }
 
 export async function handler(req: Request, ctx: HandlerContext<Data, State>) {
   if (!ctx.state.session) return ctx.render(null);
 
-  const [user, users] = await Promise.all([
-    getUserBySession(ctx.state.session),
-    listRecentlySignedInUsers(),
-  ]);
+  const user = await getUserBySession(ctx.state.session);
   if (!user) return ctx.render(null);
 
-  const games = await listGamesByPlayer(user.id);
-
-  return ctx.render({ user, users, games });
+  return ctx.render({ user });
 }
 
 export default function Home(props: PageProps<Data>) {
@@ -41,19 +30,15 @@ export default function Home(props: PageProps<Data>) {
       </Head>
       <div class="px-4 py-8 mx-auto max-w-screen-md">
         <Header user={props.data?.user ?? null} />
-        {props.data ? <SignedIn {...props.data} /> : <SignedOut />}
+        {props.data ? <SignedIn /> : <SignedOut />}
       </div>
     </>
   );
 }
 
-function SignedIn(props: SignedInData) {
+function SignedIn() {
   return (
     <>
-      <p class="my-6">
-        Challenge someone to a game of Splendargent! Just enter their GitHub
-        username in the box below and click "Start Game".
-      </p>
       <form action="/start" method="POST">
         <input
           type="text"
@@ -63,7 +48,12 @@ function SignedIn(props: SignedInData) {
           required
         />
         <Button type="submit" class="mt-4">
-          Start Game
+          Join Game
+        </Button>
+      </form>
+      <form action="/create" method="POST">
+        <Button type="submit" class="mt-4">
+          Create Game
         </Button>
       </form>
     </>

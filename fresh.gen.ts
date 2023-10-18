@@ -10,9 +10,9 @@ import * as $4 from "./routes/api/events/games.ts";
 import * as $5 from "./routes/auth/oauth2callback.ts";
 import * as $6 from "./routes/auth/signin.ts";
 import * as $7 from "./routes/auth/signout.ts";
-import * as $8 from "./routes/game/[id].tsx";
-import * as $9 from "./routes/index.tsx";
-import * as $10 from "./routes/start.tsx";
+import * as $8 from "./routes/create.tsx";
+import * as $9 from "./routes/game/[id].tsx";
+import * as $10 from "./routes/index.tsx";
 import * as $$0 from "./islands/GameDisplay.tsx";
 
 const manifest = {
@@ -25,9 +25,9 @@ const manifest = {
     "./routes/auth/oauth2callback.ts": $5,
     "./routes/auth/signin.ts": $6,
     "./routes/auth/signout.ts": $7,
-    "./routes/game/[id].tsx": $8,
-    "./routes/index.tsx": $9,
-    "./routes/start.tsx": $10,
+    "./routes/create.tsx": $8,
+    "./routes/game/[id].tsx": $9,
+    "./routes/index.tsx": $10,
   },
   islands: {
     "./islands/GameDisplay.tsx": $$0,
