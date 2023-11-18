@@ -47,6 +47,7 @@ export type Card = Readonly<{
 export type Noble = {
   points: number;
   requirements: Price;
+  img: string;
 };
 
 export type Player = {

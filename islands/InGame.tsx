@@ -15,6 +15,15 @@ import { UserNameHorizontal, UserNameVertical } from "🧱/User.tsx";
 import { rainbowBackground } from "🧱/animations.ts";
 import { match } from "npm:ts-pattern";
 
+const symbolImageMap = new Map([
+  [GemStone.EMERALD, "/cards/emerald.jpg"],
+  [GemStone.DIAMOND, "/cards/diamond.jpg"],
+  [GemStone.SAPPHIRE, "/cards/sapphire.jpg"],
+  [GemStone.ONYX, "/cards/onyx.jpg"],
+  [GemStone.RUBY, "/cards/ruby.jpg"],
+  // [GemStone.GOLD, "#fff101"],
+]);
+
 export function InGame(props: { game: RunningGame; user: User }) {
   const { game, user } = props;
   const isPlayerTurn = game.board.turn === user.id;
@@ -267,7 +276,7 @@ function Row(props: { cards: (Card | null)[]; gameId: string }) {
 
 function Card(props: { card: Card | null; gameId: string }) {
   if (!props.card) {
-    return <div class="bg-gray-800 w-32 h-48 rounded-lg"></div>;
+    return <div class="bg-gray-800 w-32 h-44 rounded-lg"></div>;
   }
 
   const buy = async () => {
@@ -286,16 +295,22 @@ function Card(props: { card: Card | null; gameId: string }) {
 
   return (
     <div
-      class={`relative w-32 h-48 rounded-lg flex flex-col p-2 bg-gray-200`}
+      class={`relative w-32 h-44 rounded-lg flex flex-col p-2 bg-gray-200`}
       onClick={buy}
     >
       <div
-        class={`absolute bg-[${symbolColorMap.get(
-          props.card.symbol
-        )}] inset-x-0 top-0 h-full opacity-40 rounded-lg`}
+        class={`absolute inset-x-0 top-0 h-full bg-cover opacity-80 rounded-lg`}
+        style={{
+          backgroundImage: `url(${symbolImageMap.get(props.card.symbol)})`,
+        }}
       ></div>
       <div class="z-10">
-        <span class="text-3xl font-extrabold">{props.card.points}</span>
+        <span
+          class="text-3xl font-extrabold text-white"
+          style={{ textShadow: "rgba(0, 0, 0, 1) 0px 0px 10px" }}
+        >
+          {props.card.points}
+        </span>
       </div>
       <div class="z-10 flex flex-col justify-end flex-grow gap-y-0.5">
         {(Object.entries(props.card.price) as [GemStone, number][]).map(
@@ -352,8 +367,16 @@ function Nobles(props: { nobles: Noble[] }) {
 
 function NobleCard(props: { noble: Noble }) {
   return (
-    <div class={`bg-gray-200 rounded-lg w-40 h-40 p-2 flex flex-col`}>
-      <span class="ml-2 text-3xl font-extrabold">{props.noble.points}</span>
+    <div
+      class={`rounded-lg w-40 h-40 p-2 flex flex-col bg-cover`}
+      style={{ backgroundImage: `url(${props.noble.img})` }}
+    >
+      <span
+        class="ml-2 text-3xl font-extrabold text-white"
+        style={{ textShadow: "rgba(0, 0, 0, 1) 0px 0px 10px" }}
+      >
+        {props.noble.points}
+      </span>
       <div class="flex flex-col flex-grow gap-y-0.5 justify-end">
         {(Object.entries(props.noble.requirements) as [GemStone, number][]).map(
           ([gemStone, count]) => (

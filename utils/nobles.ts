@@ -12,6 +12,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 4,
       [GemStone.ONYX]: 0,
     },
+    img: "/nobles_10.gif",
   },
   {
     points: 3,
@@ -22,6 +23,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 3,
       [GemStone.ONYX]: 3,
     },
+    img: "/nobles_12.gif",
   },
   {
     points: 3,
@@ -32,6 +34,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 0,
       [GemStone.ONYX]: 0,
     },
+    img: "/nobles_24.gif",
   },
   {
     points: 3,
@@ -42,6 +45,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 0,
       [GemStone.ONYX]: 4,
     },
+    img: "/nobles_26.gif",
   },
   {
     points: 3,
@@ -52,6 +56,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 0,
       [GemStone.ONYX]: 0,
     },
+    img: "/nobles_38.gif",
   },
   {
     points: 3,
@@ -62,6 +67,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 3,
       [GemStone.ONYX]: 0,
     },
+    img: "/nobles_40.gif",
   },
   {
     points: 3,
@@ -72,6 +78,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 0,
       [GemStone.ONYX]: 0,
     },
+    img: "/nobles_10.gif",
   },
   {
     points: 3,
@@ -82,6 +89,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 4,
       [GemStone.ONYX]: 4,
     },
+    img: "/nobles_12.gif",
   },
   {
     points: 3,
@@ -92,6 +100,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 0,
       [GemStone.ONYX]: 3,
     },
+    img: "/nobles_24.gif",
   },
   {
     points: 3,
@@ -102,6 +111,7 @@ export const nobles: Noble[] = [
       [GemStone.RUBY]: 3,
       [GemStone.ONYX]: 3,
     },
+    img: "/nobles_26.gif",
   },
 ];
 
