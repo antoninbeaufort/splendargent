@@ -31,7 +31,7 @@ export async function setUserWithSession(user: User, session: string) {
     .commit();
 }
 
-export async function getUserBySession(session: string) {
+export async function getUserBySession(session: string): Promise<User> {
   const res = await kv.get<User>(["users_by_session", session]);
   return res.value;
 }
@@ -79,21 +79,20 @@ export async function setGame(game: SplendorGame, versionstamp?: string) {
 
   if (res.ok) {
     console.log("broadcasting game update", game.id, res.versionstamp);
+
     const bc1 = new BroadcastChannel(`game/${game.id}`);
     bc1.postMessage({ game, versionstamp: res!.versionstamp });
     // TODO: make me nb of players agnostic
-    const bc2 = new BroadcastChannel(
-      `games_by_user/${game.players[0].user.id}`
-    );
-    bc2.postMessage({ game, versionstamp: res!.versionstamp });
-    const bc3 = new BroadcastChannel(
-      `games_by_user/${game.players[1].user.id}`
-    );
-    bc3.postMessage({ game, versionstamp: res!.versionstamp });
+    for (const player of game.players) {
+      const playerBc = new BroadcastChannel(`games_by_user/${player.user.id}`);
+      playerBc.postMessage({ game, versionstamp: res!.versionstamp });
+      setTimeout(() => {
+        playerBc.close();
+      }, 5);
+    }
+
     setTimeout(() => {
       bc1.close();
-      bc2.close();
-      bc3.close();
     }, 5);
   }
   return res.ok;
@@ -110,7 +109,7 @@ export async function listGamesByPlayer(
   return games;
 }
 
-export async function getGame(id: string) {
+export async function getGame(id: string): Promise<SplendorGame> {
   const res = await kv.get<SplendorGame>(["games", id]);
   // console.log(res.value);
   return res.value;

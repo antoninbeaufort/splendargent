@@ -13,7 +13,10 @@ import * as $7 from "./routes/auth/signout.ts";
 import * as $8 from "./routes/create.tsx";
 import * as $9 from "./routes/game/[id].tsx";
 import * as $10 from "./routes/index.tsx";
+import * as $11 from "./routes/join.tsx";
 import * as $$0 from "./islands/GameDisplay.tsx";
+import * as $$1 from "./islands/InGame.tsx";
+import * as $$2 from "./islands/LobbyDisplay.tsx";
 
 const manifest = {
   routes: {
@@ -28,9 +31,12 @@ const manifest = {
     "./routes/create.tsx": $8,
     "./routes/game/[id].tsx": $9,
     "./routes/index.tsx": $10,
+    "./routes/join.tsx": $11,
   },
   islands: {
     "./islands/GameDisplay.tsx": $$0,
+    "./islands/InGame.tsx": $$1,
+    "./islands/LobbyDisplay.tsx": $$2,
   },
   baseUrl: import.meta.url,
 };

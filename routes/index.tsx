@@ -39,10 +39,10 @@ export default function Home(props: PageProps<Data>) {
 function SignedIn() {
   return (
     <>
-      <form action="/start" method="POST">
+      <form action="/join" method="POST">
         <input
           type="text"
-          name="opponent"
+          name="gameId"
           placeholder="@monalisa"
           class="w-full px-4 py-2 border border-gray-300 rounded-md flex-1"
           required

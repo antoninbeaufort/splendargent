@@ -8,9 +8,10 @@ import {
   AllowedNumberOfPlayers,
   Card,
   GemStone,
+  Lobby,
   Noble,
   Player,
-  SplendorGame,
+  RunningGame,
   User,
 } from "🛠️/types.ts";
 
@@ -59,8 +60,16 @@ const isValidNumberOfPlayers = (
   return [2, 3, 4].includes(numberOfPlayers);
 };
 
-export const initializeGameFrom = (users: User[]): SplendorGame => {
-  const numberOfPlayers = users.length;
+export const initializeLobbyFrom = (user: User): Lobby => {
+  return {
+    id: crypto.randomUUID(),
+    players: [{ user }],
+    status: "lobby",
+  };
+};
+
+export const initializeGameFrom = (lobby: Lobby): RunningGame => {
+  const numberOfPlayers = lobby.players.length;
   if (!isValidNumberOfPlayers(numberOfPlayers)) {
     throw new Error("Unvalid number of players");
   }
@@ -73,9 +82,9 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
     2: decks[2].splice(0, 4),
     3: decks[3].splice(0, 4),
   };
-  const shuffledUsers = shuffle(users);
-  const players = shuffledUsers.map((user) => ({
-    user,
+  const shuffledPlayers = shuffle(lobby.players);
+  const players = shuffledPlayers.map((player) => ({
+    user: player.user,
     tokens: {
       [GemStone.DIAMOND]: 0,
       [GemStone.SAPPHIRE]: 0,
@@ -88,13 +97,16 @@ export const initializeGameFrom = (users: User[]): SplendorGame => {
   }));
 
   return {
-    id: crypto.randomUUID(),
+    id: lobby.id,
     players,
-    visibleCards,
-    nobles,
-    tokens,
-    decks,
-    turn: players[0].user.id,
+    board: {
+      visibleCards,
+      nobles,
+      tokens,
+      decks,
+      turn: players[0].user.id,
+    },
+    status: "in_game",
   };
 };
 
@@ -106,9 +118,9 @@ export type Action =
     }
   | { type: "buy"; card: Card };
 
-const currentPlayerFrom = (game: SplendorGame): Player => {
+const currentPlayerFrom = (game: RunningGame): Player => {
   const currentPlayer = game.players.find(
-    (player) => player.user.id === game.turn
+    (player) => player.user.id === game.board.turn
   );
   if (!currentPlayer) {
     throw new Error("Unable to find current player");
@@ -178,8 +190,8 @@ export const assertPicking = (
 // 3 tokens with different color
 // min 4 tokens on stack to pick 2 of same color
 // a player cannot have more than 10 tokens at the end of his round he need to give away some token to be max 10
-const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
-  assertPicking(game.tokens, tokens);
+const pick = (game: RunningGame, tokens: GemStone[]): RunningGame => {
+  assertPicking(game.board.tokens, tokens);
 
   const currentPlayer = currentPlayerFrom(game);
 
@@ -190,14 +202,14 @@ const pick = (game: SplendorGame, tokens: GemStone[]): SplendorGame => {
     } else {
       currentPlayer.tokens[token] = 1;
     }
-    game.tokens[token]--;
+    game.board.tokens[token]--;
   }
 
   return game;
 };
 
-const assertCardVisible = (game: SplendorGame, card: Card) => {
-  const visibleCards = game.visibleCards[card.level];
+const assertCardVisible = (game: RunningGame, card: Card) => {
+  const visibleCards = game.board.visibleCards[card.level];
   if (!visibleCards) {
     throw new Error("card not visible");
   }
@@ -239,7 +251,7 @@ const assertPlayerHasEnoughGemStone = (player: Player, card: Card) => {
 };
 
 const exchangeTokensForBuyCard = (
-  game: SplendorGame,
+  game: RunningGame,
   player: Player,
   card: Card
 ) => {
@@ -257,20 +269,21 @@ const exchangeTokensForBuyCard = (
       continue;
     }
     player.tokens[gemStone]! -= quantityMinusPlayerGemStoneCardOwned;
-    game.tokens[gemStone]! += quantityMinusPlayerGemStoneCardOwned;
+    game.board.tokens[gemStone]! += quantityMinusPlayerGemStoneCardOwned;
   }
 };
 
-const moveBoughtCard = (game: SplendorGame, player: Player, card: Card) => {
-  const visibleCardIndex = game.visibleCards[card.level].findIndex(
+const moveBoughtCard = (game: RunningGame, player: Player, card: Card) => {
+  const visibleCardIndex = game.board.visibleCards[card.level].findIndex(
     (visibleCard) => equal(visibleCard, card)
   );
-  const replacementCard = game.decks[card.level].shift();
-  game.visibleCards[card.level][visibleCardIndex] = replacementCard ?? null;
+  const replacementCard = game.board.decks[card.level].shift();
+  game.board.visibleCards[card.level][visibleCardIndex] =
+    replacementCard ?? null;
   player.cards.push(card);
 };
 
-const buy = (game: SplendorGame, card: Card): SplendorGame => {
+const buy = (game: RunningGame, card: Card): RunningGame => {
   assertCardVisible(game, card);
   const currentPlayer = currentPlayerFrom(game);
   assertPlayerHasEnoughGemStone(currentPlayer, card);
@@ -281,13 +294,13 @@ const buy = (game: SplendorGame, card: Card): SplendorGame => {
   return game;
 };
 
-const reserve = (game: SplendorGame, card: Card): SplendorGame => {
+const reserve = (game: RunningGame, card: Card): RunningGame => {
   return game;
 };
 
-const getNextPlayer = (game: SplendorGame): string => {
+const getNextPlayer = (game: RunningGame): string => {
   const currentPlayerIndex = game.players.findIndex(
-    (player) => player.user.id === game.turn
+    (player) => player.user.id === game.board!.turn
   );
   if (currentPlayerIndex === -1) {
     throw new Error("current player index not found");
@@ -309,16 +322,16 @@ const areRequirementsMet = (noble: Noble, player: Player): boolean => {
   return true;
 };
 
-const distributeNoble = (game: SplendorGame): SplendorGame => {
+const distributeNoble = (game: RunningGame): RunningGame => {
   const currentPlayer = currentPlayerFrom(game);
 
-  const nobleIndexThatCanBeGrabbedByCurrentPlayer = game.nobles.findIndex(
+  const nobleIndexThatCanBeGrabbedByCurrentPlayer = game.board.nobles.findIndex(
     (noble) => areRequirementsMet(noble, currentPlayer)
   );
   if (nobleIndexThatCanBeGrabbedByCurrentPlayer === -1) {
     return game;
   }
-  const [removedNoble] = game.nobles.splice(
+  const [removedNoble] = game.board.nobles.splice(
     nobleIndexThatCanBeGrabbedByCurrentPlayer,
     1
   );
@@ -340,7 +353,7 @@ export const getPlayerPoints = (player: Player): number => {
 
 export type Leaderboard = { player: string; score: number }[];
 
-const generateLeaderboard = (game: SplendorGame): Leaderboard => {
+const generateLeaderboard = (game: RunningGame): Leaderboard => {
   return game.players
     .map((player) => ({
       player: player.user.id,
@@ -349,7 +362,7 @@ const generateLeaderboard = (game: SplendorGame): Leaderboard => {
     .sort((a, b) => b.score - a.score);
 };
 
-export const action = (game: SplendorGame, action: Action): SplendorGame => {
+export const action = (game: RunningGame, action: Action): RunningGame => {
   const gameCopy = structuredClone(game);
 
   match(action)
@@ -360,7 +373,7 @@ export const action = (game: SplendorGame, action: Action): SplendorGame => {
 
   distributeNoble(gameCopy);
 
-  gameCopy.turn = getNextPlayer(gameCopy);
+  gameCopy.board.turn = getNextPlayer(gameCopy);
 
   return gameCopy;
 };
@@ -376,8 +389,8 @@ export interface GameStateEnded {
 
 export type GameState = GameStateInProgress | GameStateEnded;
 
-export const analyzeGame = (game: SplendorGame): GameState => {
-  const isFirstPlayerTurn = game.turn === game.players[0].user.id;
+export const analyzeGame = (game: RunningGame): GameState => {
+  const isFirstPlayerTurn = game.board.turn === game.players[0].user.id;
   if (!isFirstPlayerTurn) {
     return {
       state: "in_progress",

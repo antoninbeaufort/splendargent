@@ -29,7 +29,7 @@ export const handler: Handlers<undefined, State> = {
       });
     }
 
-    if (game.turn !== user.id) {
+    if (game.board.turn !== user.id) {
       return new Response("Not your turn", {
         status: 403,
       });

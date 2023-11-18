@@ -59,12 +59,27 @@ export type Player = {
 
 export type AllowedNumberOfPlayers = 2 | 3 | 4;
 
-export type SplendorGame = {
-  id: string;
-  players: Player[];
+export type Board = {
   visibleCards: Record<Card["level"], (Card | null)[]>;
   nobles: Noble[];
   tokens: Record<GemStone, number>;
   decks: Record<Card["level"], Card[]>; // TODO: make this private
   turn: Player["user"]["id"];
 };
+
+export type Lobby = {
+  id: string;
+  players: {
+    user: User;
+  }[];
+  status: "lobby";
+};
+
+export type RunningGame = {
+  id: string;
+  players: Player[];
+  board: Board;
+  status: "in_game";
+};
+
+export type SplendorGame = Lobby | RunningGame;
